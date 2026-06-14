@@ -28,6 +28,10 @@
     "lenis": "^1.1.5",
     "zustand": "^4.5.2"
   },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.11",
     "@tailwindcss/typography": "^0.5.19",
