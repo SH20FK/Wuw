@@ -23,6 +23,29 @@ export default function WorkPage() {
     ? projects 
     : projects.filter(p => p.type === category);
 
+  const handleCategoryChange = (newCat: 'ALL' | 'WEB' | 'MOD' | 'UTIL') => {
+    // 1. Reset mobile horizontal scroll
+    if (trackRef.current) {
+      const parent = trackRef.current.parentElement;
+      if (parent) {
+        parent.scrollTo({ left: 0, behavior: 'instant' as any });
+      }
+    }
+
+    // 2. Clear current GSAP ScrollTriggers associated with this section
+    ScrollTrigger.getAll().forEach(trigger => {
+      if (trigger.vars.trigger === sectionRef.current) {
+        trigger.kill();
+      }
+    });
+
+    // 3. Reset window vertical scroll back to top of page/section
+    window.scrollTo({ top: 0, behavior: 'instant' as any });
+
+    // 4. Update the active filter category
+    setCategory(newCat);
+  };
+
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     if (isMobile) return;
@@ -90,10 +113,10 @@ export default function WorkPage() {
         <div className="absolute top-24 left-8 md:left-16 z-20 pointer-events-none">
           <SectionLabel>/ 03 WORK</SectionLabel>
           <div className="flex gap-4 font-mono text-xs md:text-sm text-text-muted mt-2 pointer-events-auto">
-            <button onClick={() => setCategory('ALL')} className={`${category === 'ALL' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Все</button>
-            <button onClick={() => setCategory('WEB')} className={`${category === 'WEB' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Web</button>
-            <button onClick={() => setCategory('MOD')} className={`${category === 'MOD' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Моды</button>
-            <button onClick={() => setCategory('UTIL')} className={`${category === 'UTIL' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Утилиты</button>
+            <button onClick={() => handleCategoryChange('ALL')} className={`${category === 'ALL' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Все</button>
+            <button onClick={() => handleCategoryChange('WEB')} className={`${category === 'WEB' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Web</button>
+            <button onClick={() => handleCategoryChange('MOD')} className={`${category === 'MOD' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Моды</button>
+            <button onClick={() => handleCategoryChange('UTIL')} className={`${category === 'UTIL' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Утилиты</button>
           </div>
         </div>
         <div className="w-full h-full md:absolute md:inset-0 flex items-center overflow-x-auto md:overflow-x-hidden snap-x snap-mandatory md:snap-none scrollbar-none py-12 md:py-0">

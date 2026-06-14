@@ -7,6 +7,7 @@ import { spring } from '@/lib/animations';
 import Image from 'next/image';
 import { getTrackImage } from '@/lib/utils';
 import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Moon, Sun, Sunrise, Sunset, Sparkles, Activity } from 'lucide-react';
 
 interface TopArtist {
   name: string;
@@ -289,23 +290,9 @@ function MusicDashboard() {
                   </div>
 
                   <div className="font-mono text-[11px] text-text-muted ml-4 shrink-0 flex items-center gap-3 z-10">
-                    {/* Animated small sound waves inside hovered row */}
-                    {isHovered && !isNowPlaying && (
-                      <div className="flex gap-0.5 items-end h-3 w-4">
-                        {[...Array(3)].map((_, idx) => (
-                          <motion.div
-                            key={idx}
-                            className="w-[2px] bg-accent-sub"
-                            animate={{ height: ['2px', '12px', '2px'] }}
-                            transition={{ duration: 0.5 + idx * 0.12, repeat: Infinity, ease: 'easeInOut' }}
-                          />
-                        ))}
-                      </div>
-                    )}
-
                     {isNowPlaying ? (
                       <span className="text-accent text-[10px] tracking-wider uppercase font-semibold flex items-center gap-1.5 bg-accent/10 px-2.5 py-1 rounded-full border border-accent/20 animate-pulse">
-                        <span className="w-1.5 h-1.5 bg-accent rounded-full" />
+                        <span className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
                         Сейчас
                       </span>
                     ) : (
@@ -322,23 +309,23 @@ function MusicDashboard() {
       {/* RIGHT COLUMN: Interactive Bento Stats & Top Charts (5 Columns) */}
       <div className="lg:col-span-5 w-full flex flex-col gap-6">
         {/* Tab Selection */}
-        <div className="bg-surface border border-[rgba(184,173,158,0.08)] p-1.5 rounded-xl flex items-center gap-1 w-full font-mono text-xs">
+        <div className="bg-surface border border-[rgba(184,173,158,0.08)] p-1.5 rounded-xl flex items-center gap-1 w-full font-mono text-xs shadow-md">
           <button 
             onClick={() => setActiveTab('artists')}
-            className={`flex-1 py-2.5 rounded-lg text-center transition-all duration-300 ${activeTab === 'artists' ? 'bg-accent text-bg font-semibold shadow-lg' : 'text-text-muted hover:text-text'}`}
+            className={`flex-1 py-3 rounded-lg text-center transition-all duration-300 ${activeTab === 'artists' ? 'bg-accent text-bg font-semibold shadow-md' : 'text-text-muted hover:text-text'}`}
           >
             ТОП АРТИСТЫ
           </button>
           <button 
             onClick={() => setActiveTab('tracks')}
-            className={`flex-1 py-2.5 rounded-lg text-center transition-all duration-300 ${activeTab === 'tracks' ? 'bg-accent text-bg font-semibold shadow-lg' : 'text-text-muted hover:text-text'}`}
+            className={`flex-1 py-3 rounded-lg text-center transition-all duration-300 ${activeTab === 'tracks' ? 'bg-accent text-bg font-semibold shadow-md' : 'text-text-muted hover:text-text'}`}
           >
             ТОП ТРЕКИ
           </button>
         </div>
 
         {/* Bento Board Frame */}
-        <div className="bg-surface border border-[rgba(184,173,158,0.07)] p-6 md:p-8 rounded-2xl relative overflow-hidden shadow-xl min-h-[420px]">
+        <div className="bg-surface border border-[rgba(184,173,158,0.07)] p-6 md:p-8 rounded-2xl relative overflow-hidden shadow-xl min-h-[460px] flex flex-col">
           <div className="absolute top-0 right-0 w-48 h-48 bg-accent/2 rounded-full blur-[60px] pointer-events-none" />
 
           <AnimatePresence mode="wait">
@@ -353,17 +340,20 @@ function MusicDashboard() {
                 animate={{ opacity: 1, x: 0 }} 
                 exit={{ opacity: 0, x: -10 }} 
                 transition={spring.snappy}
-                className="flex flex-col gap-5"
+                className="flex flex-col gap-4 flex-1"
               >
-                <div className="flex flex-col">
-                  <h3 className="font-display text-xl text-text mb-1">Любимые артисты</h3>
-                  <p className="font-mono text-[10px] text-text-muted uppercase tracking-wider">На основе истории прослушиваний</p>
+                <div className="flex flex-col mb-2">
+                  <h3 className="font-display text-xl text-text mb-1 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-accent" />
+                    Любимые артисты
+                  </h3>
+                  <p className="font-mono text-[9px] text-text-muted uppercase tracking-wider">Максимальный резонанс за все время</p>
                 </div>
 
-                <div className="flex flex-col gap-4 mt-2">
+                <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-0.5 scrollbar-none">
                   {topArtists.map((artist, i) => {
                     const maxPlay = parseInt(topArtists[0]?.playcount || '1');
-                    const fillPercent = Math.max(10, Math.min(100, (parseInt(artist.playcount) / maxPlay) * 100));
+                    const fillPercent = Math.max(12, Math.min(100, (parseInt(artist.playcount) / maxPlay) * 100));
 
                     return (
                       <a 
@@ -371,29 +361,34 @@ function MusicDashboard() {
                         href={artist.url} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="group flex flex-col gap-1.5 focus:outline-none relative overflow-visible"
+                        className="group flex items-center justify-between p-3.5 bg-bg/40 hover:bg-[#181620]/60 transition-all duration-300 relative overflow-hidden rounded-[24px] rounded-tl-[8px] rounded-br-[8px] border border-[rgba(184,173,158,0.06)] hover:border-accent/15 focus:outline-none"
                       >
-                        {/* Huge stylish rank design */}
-                        <div className="absolute right-0 top-0 text-[3.5rem] font-display font-black leading-none text-white/[0.02] select-none pointer-events-none transition-colors group-hover:text-accent/[0.04] font-semibold">
-                          0{i+1}
+                        {/* Material 3 capsule fill underlay representing progress */}
+                        <motion.div 
+                          className="absolute inset-y-0 left-0 bg-accent/[0.04] rounded-r-2xl origin-left"
+                          initial={{ scaleX: 0 }}
+                          whileInView={{ scaleX: fillPercent / 100 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                          style={{ width: '100%' }}
+                        />
+
+                        {/* Rank Squicle Marker */}
+                        <div className="flex items-center gap-3.5 z-10 truncate">
+                          <div className="w-9 h-9 shrink-0 bg-bg rounded-[12px] rounded-tr-[4px] rounded-bl-[4px] border border-[rgba(184,173,158,0.08)] flex items-center justify-center font-mono text-[11px] text-accent-sub font-bold group-hover:bg-accent group-hover:text-bg transition-colors duration-300">
+                            0{i+1}
+                          </div>
+                          <div className="flex flex-col truncate">
+                            <span className="font-body text-sm text-text font-medium group-hover:text-accent transition-colors truncate max-w-[170px]">
+                              {artist.name}
+                            </span>
+                            <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider mt-0.5">Лидер прослушиваний</span>
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between font-mono text-xs z-10">
-                          <span className="text-text group-hover:text-accent transition-colors font-medium">
-                            <span className="text-text-muted mr-2">0{i+1}.</span>
-                            {artist.name}
-                          </span>
-                          <span className="text-text-muted group-hover:text-text transition-colors">{artist.playcount} скробблов</span>
-                        </div>
-                        {/* Custom progress bar */}
-                        <div className="w-full h-[3px] bg-[rgba(184,173,158,0.08)] rounded-full overflow-hidden z-10">
-                          <motion.div 
-                            className="h-full bg-accent" 
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${fillPercent}%` }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8, delay: i * 0.05, ease: 'easeOut' }}
-                          />
+                        {/* Scrobble badge */}
+                        <div className="z-10 px-3 py-1 bg-bg/90 border border-[rgba(184,173,158,0.05)] rounded-full text-xs text-text duration-300 group-hover:border-accent-sub/30 shrink-0 select-none">
+                          <span className="font-semibold text-accent font-mono">{artist.playcount}</span> <span className="text-[10px] text-text-muted">скр.</span>
                         </div>
                       </a>
                     );
@@ -407,17 +402,20 @@ function MusicDashboard() {
                 animate={{ opacity: 1, x: 0 }} 
                 exit={{ opacity: 0, x: -10 }} 
                 transition={spring.snappy}
-                className="flex flex-col gap-5"
+                className="flex flex-col gap-4 flex-1"
               >
-                <div className="flex flex-col">
-                  <h3 className="font-display text-xl text-text mb-1">Рекордсмены стриминга</h3>
-                  <p className="font-mono text-[10px] text-text-muted uppercase tracking-wider">Максимум повторов за все время</p>
+                <div className="flex flex-col mb-2">
+                  <h3 className="font-display text-xl text-text mb-1 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-accent-sub" />
+                    Рекордсмены стриминга
+                  </h3>
+                  <p className="font-mono text-[9px] text-text-muted uppercase tracking-wider">Максимум повторов за все время</p>
                 </div>
 
-                <div className="flex flex-col gap-4 mt-2">
+                <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-0.5 scrollbar-none">
                   {topTracks.map((track, i) => {
                     const maxTrackPlay = parseInt(topTracks[0]?.playcount || '1');
-                    const fillPercent = Math.max(10, Math.min(100, (parseInt(track.playcount) / maxTrackPlay) * 100));
+                    const fillPercent = Math.max(12, Math.min(100, (parseInt(track.playcount) / maxTrackPlay) * 100));
 
                     return (
                       <a 
@@ -425,32 +423,32 @@ function MusicDashboard() {
                         href={track.url} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="group flex flex-col gap-1.5 focus:outline-none relative overflow-visible"
+                        className="group flex items-center justify-between p-3.5 bg-bg/40 hover:bg-[#181620]/60 transition-all duration-300 relative overflow-hidden rounded-[24px] rounded-tl-[8px] rounded-br-[8px] border border-[rgba(184,173,158,0.06)] hover:border-accent-sub/15 focus:outline-none"
                       >
-                        {/* Huge stylish rank design */}
-                        <div className="absolute right-0 top-0 text-[3.5rem] font-display font-black leading-none text-white/[0.02] select-none pointer-events-none transition-colors group-hover:text-accent-sub/[0.04] font-semibold">
-                          0{i+1}
-                        </div>
+                        {/* Custom visual progress bar underlay */}
+                        <motion.div 
+                          className="absolute inset-y-0 left-0 bg-accent-sub/[0.04] rounded-r-2xl origin-left"
+                          initial={{ scaleX: 0 }}
+                          whileInView={{ scaleX: fillPercent / 100 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                          style={{ width: '100%' }}
+                        />
 
-                        <div className="flex items-center justify-between font-mono text-xs overflow-hidden z-10">
-                          <div className="flex flex-col truncate pr-4">
-                            <span className="text-text group-hover:text-accent-sub font-medium truncate">
-                              <span className="text-text-muted mr-1.5">0{i+1}.</span>
+                        <div className="flex items-center gap-3.5 z-10 overflow-hidden pr-2">
+                          <div className="w-9 h-9 shrink-0 bg-bg rounded-[12px] rounded-tr-[4px] rounded-bl-[4px] border border-[rgba(184,173,158,0.08)] flex items-center justify-center font-mono text-[11px] text-accent-sub font-bold group-hover:bg-accent-sub group-hover:text-bg transition-colors duration-300">
+                            0{i+1}
+                          </div>
+                          <div className="flex flex-col truncate pr-2">
+                            <span className="font-body text-sm text-text font-medium group-hover:text-accent-sub transition-colors truncate max-w-[150px] md:max-w-[170px]">
                               {track.name}
                             </span>
-                            <span className="text-[10px] text-text-muted font-light truncate pl-5">{track.artist?.name}</span>
+                            <span className="font-mono text-[9px] text-text-muted truncate mt-0.5">{track.artist?.name}</span>
                           </div>
-                          <span className="text-text-muted hover:text-text shrink-0">{track.playcount} раз</span>
                         </div>
-                        {/* Custom track visual bar */}
-                        <div className="w-full h-[3px] bg-[rgba(184,173,158,0.08)] rounded-full overflow-hidden z-10">
-                          <motion.div 
-                            className="h-full bg-accent-sub" 
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${fillPercent}%` }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8, delay: i * 0.05, ease: 'easeOut' }}
-                          />
+
+                        <div className="z-10 px-3 py-1 bg-bg/90 border border-[rgba(184,173,158,0.05)] rounded-full text-xs text-text duration-300 group-hover:border-accent/30 shrink-0 select-none">
+                          <span className="font-semibold text-accent-sub font-mono">{track.playcount}</span> <span className="text-[10px] text-text-muted">раз</span>
                         </div>
                       </a>
                     );
@@ -461,35 +459,42 @@ function MusicDashboard() {
           </AnimatePresence>
         </div>
 
-        {/* Dynamic Interactive Weekly Scrobble Matrix Heatmap */}
-        <div className="bg-surface border border-[rgba(184,173,158,0.07)] p-5 rounded-2xl flex flex-col relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-mono text-[10px] text-accent tracking-wider uppercase font-semibold">СЕТКА СКРОББЛОВ (16 недель)</span>
-            <span className="font-mono text-[9px] text-text-muted">Плотность прослушиваний</span>
+        {/* Overhauled, highly interactive Weekly Scrobble Matrix Heatmap */}
+        <div className="bg-surface border border-[rgba(184,173,158,0.07)] p-6 rounded-2xl flex flex-col relative overflow-hidden shadow-lg gap-6">
+          <div className="flex items-center justify-between border-b border-[rgba(184,173,158,0.06)] pb-3">
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] text-accent tracking-wider uppercase font-semibold">СЕТКА СКРОББЛОВ (16 недель)</span>
+              <span className="font-mono text-[9px] text-text-muted mt-0.5">Ритмы и плотность активности</span>
+            </div>
+            <div className="px-2.5 py-0.5 bg-[rgba(184,173,158,0.05)] border border-[rgba(184,173,158,0.08)] rounded-full font-mono text-[8.5px] text-accent scale-95 pr-3 pl-3">
+              13.5k+ скр. всего
+            </div>
           </div>
 
           <div className="flex gap-2">
             {/* Days marker column */}
-            <div className="flex flex-col justify-between text-[8px] font-mono text-text-muted py-1 h-24 uppercase select-none leading-none">
+            <div className="flex flex-col justify-between text-[8px] font-mono text-text-muted py-1 h-32 uppercase select-none leading-none">
               {heatmapData.days.map(d => <span key={d}>{d}</span>)}
             </div>
 
             {/* Matrix grid container */}
-            <div className="flex-1 flex flex-col justify-between h-24 gap-1.5 py-1">
+            <div className="flex-1 flex flex-col justify-between h-32 gap-1.5 py-1">
               {heatmapData.grid.map((row, rIdx) => (
-                <div key={rIdx} className="flex justify-between gap-1 h-[7px] w-full">
+                <div key={rIdx} className="flex justify-between gap-1 h-3 w-full">
                   {row.map((val, wIdx) => {
-                    const opacity = val === 0 ? 0.05 : val < 3 ? 0.25 : val < 6 ? 0.55 : val < 9 ? 0.8 : 1.0;
+                    const opacity = val === 0 ? 0.05 : val < 3 ? 0.28 : val < 6 ? 0.58 : val < 9 ? 0.84 : 1.0;
+                    const glowClass = val >= 7 ? 'shadow-[0_0_8px_rgba(184,173,158,0.35)]' : '';
+
                     return (
                       <motion.div
                         key={wIdx}
-                        className="flex-1 rounded-[1.5px] bg-accent cursor-pointer group/tile relative"
+                        className={`flex-1 rounded-[3px] bg-accent cursor-crosshair group/tile relative ${glowClass}`}
                         style={{ opacity }}
-                        whileHover={{ scale: 1.45, opacity: 1, zIndex: 10 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                        whileHover={{ scale: 1.45, opacity: 1, zIndex: 12 }}
+                        transition={{ type: 'spring', stiffness: 450, damping: 14 }}
                       >
                         {/* Custom Micro Tooltip on hover */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#181620] border border-[rgba(184,173,158,0.18)] text-[8px] text-text font-mono tracking-wide px-1.5 py-0.5 rounded shadow-xl whitespace-nowrap opacity-0 pointer-events-none group-hover/tile:opacity-100 transition-opacity z-40">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#181620] border border-[rgba(184,173,158,0.18)] text-[8px] text-text font-mono tracking-wide px-2 py-0.8 rounded shadow-2xl whitespace-nowrap opacity-0 pointer-events-none group-hover/tile:opacity-100 transition-opacity duration-200 z-50">
                           {val > 0 ? `${val} скробблов` : '0 скробблов'}
                         </div>
                       </motion.div>
@@ -499,6 +504,37 @@ function MusicDashboard() {
               ))}
             </div>
           </div>
+
+          {/* Time-of-Day Listening Density Module */}
+          <div className="grid grid-cols-4 gap-2.5 border-t border-[rgba(184,173,158,0.06)] pt-5">
+            <div className="flex flex-col items-center justify-center p-2 bg-bg/30 rounded-xl border border-[rgba(184,173,158,0.03)] group hover:border-[rgba(184,173,158,0.08)] transition-colors">
+              <Moon className="w-3.5 h-3.5 text-text-muted mb-1.5 group-hover:text-[#7A8A97] transition-colors" />
+              <span className="font-mono text-[8px] text-text-muted uppercase tracking-wider">Ночь</span>
+              <span className="font-mono text-[11px] text-accent-sub font-semibold mt-0.5">8%</span>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center p-2 bg-bg/30 rounded-xl border border-[rgba(184,173,158,0.03)] group hover:border-[rgba(184,173,158,0.08)] transition-colors">
+              <Sunrise className="w-3.5 h-3.5 text-text-muted mb-1.5 group-hover:text-accent transition-colors" />
+              <span className="font-mono text-[8px] text-text-muted uppercase tracking-wider">Утро</span>
+              <span className="font-mono text-[11px] text-accent font-semibold mt-0.5">14%</span>
+            </div>
+
+            <div className="flex flex-col items-center justify-center p-2 bg-bg/30 rounded-xl border border-[rgba(184,173,158,0.03)] group hover:border-[rgba(184,173,158,0.08)] transition-colors">
+              <Sun className="w-3.5 h-3.5 text-text-muted mb-1.5 group-hover:text-accent transition-colors" />
+              <span className="font-mono text-[8px] text-text-muted uppercase tracking-wider">День</span>
+              <span className="font-mono text-[11px] text-accent font-semibold mt-0.5">32%</span>
+            </div>
+
+            <div className="flex flex-col items-center justify-center p-2 bg-accent/5 rounded-xl border border-accent/15 group shadow-inner">
+              <Sunset className="w-3.5 h-3.5 text-accent mb-1.5 animate-pulse" />
+              <span className="font-mono text-[8px] text-accent-sub uppercase tracking-wider font-semibold">Вечер</span>
+              <span className="font-mono text-[11px] text-accent font-bold mt-0.5">46%</span>
+            </div>
+          </div>
+
+          <p className="font-body text-[10px] text-text-muted text-center leading-normal italic px-1">
+            Слушает преимущественно в вечернее время. Преобладают плотные гитарные партии инди-рока, синти-вейв и концептуальный русский хип-хоп.
+          </p>
         </div>
       </div>
     </section>

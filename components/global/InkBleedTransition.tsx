@@ -98,8 +98,18 @@ export function InkBleedTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [displayChildren, setDisplayChildren] = useState<ReactNode>(children);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   const progressRef = useRef(0.0);
   const previousPathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    // Check if prefers-reduced-motion is true OR if it is a mobile device (touch or small viewport)
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    if (mediaQuery.matches || isMobile) {
+      setUseFallback(true);
+    }
+  }, []);
 
   useEffect(() => {
     // Skip on first initial render
@@ -120,8 +130,8 @@ export function InkBleedTransition({ children }: { children: ReactNode }) {
     // 1. Ink fills the screen (opacity from transparent to solid core bg)
     timeline.to(progressRef, {
       current: 1.1,
-      duration: 0.5,
-      ease: 'power3.inOut',
+      duration: 0.4,
+      ease: 'power2.inOut',
       onComplete: () => {
         // Swap display layout exactly when screen is covered
         setDisplayChildren(children);
@@ -131,9 +141,9 @@ export function InkBleedTransition({ children }: { children: ReactNode }) {
     // 2. Slow reveal dissolve
     timeline.to(progressRef, {
       current: 0.0,
-      duration: 0.6,
+      duration: 0.4,
       ease: 'power2.out',
-      delay: 0.1
+      delay: 0.08
     });
 
     return () => {
@@ -147,25 +157,36 @@ export function InkBleedTransition({ children }: { children: ReactNode }) {
         {displayChildren}
       </div>
       
-      {/* Absolute fullscreen transition canvas */}
-      <div 
-        className="fixed inset-0 w-full h-full"
-        style={{ 
-          zIndex: 80, 
-          pointerEvents: isTransitioning ? 'auto' : 'none',
-          visibility: isTransitioning ? 'visible' : 'hidden'
-        }}
-      >
-        <Canvas
-          orthographic
-          camera={{ left: -1, right: 1, top: 1, bottom: -1, near: 0, far: 1 }}
-          gl={{ antialias: false, alpha: true }}
-          dpr={[1, 1.5]}
-          style={{ width: '100%', height: '100%' }}
+      {/* Absolute fullscreen transition layer */}
+      {useFallback ? (
+        <div 
+          className="fixed inset-0 bg-[#0E0C0F] transition-all duration-300 pointer-events-none"
+          style={{ 
+            zIndex: 85, 
+            opacity: isTransitioning ? 1 : 0,
+            visibility: isTransitioning ? 'visible' : 'hidden',
+          }}
+        />
+      ) : (
+        <div 
+          className="fixed inset-0 w-full h-full"
+          style={{ 
+            zIndex: 80, 
+            pointerEvents: isTransitioning ? 'auto' : 'none',
+            visibility: isTransitioning ? 'visible' : 'hidden'
+          }}
         >
-          <TransitionPlane progressRef={progressRef} />
-        </Canvas>
-      </div>
+          <Canvas
+            orthographic
+            camera={{ left: -1, right: 1, top: 1, bottom: -1, near: 0, far: 1 }}
+            gl={{ antialias: false, alpha: true }}
+            dpr={[1, 1.5]}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <TransitionPlane progressRef={progressRef} />
+          </Canvas>
+        </div>
+      )}
     </>
   );
 }
