@@ -23,7 +23,7 @@ export function useLastFm() {
         
         if (isPlaying) {
           setNowPlaying(track);
-          const artist = track.artist['#text'].toLowerCase();
+          const artist = track.artist['#text']?.toLowerCase() || '';
           const isHeavy = ['mzlff', 'слава кпсс', 'pyrokinesis', 'shadowraze'].some(a => artist.includes(a));
           if (isHeavy) {
             gsap.to(grainUniforms, { uIntensity: 0.09, uSpeed: 2.5, duration: 2, onUpdate: updateGrainStore });
@@ -31,8 +31,8 @@ export function useLastFm() {
             gsap.to(grainUniforms, { uIntensity: 0.045, uSpeed: 1.0, duration: 2, onUpdate: updateGrainStore });
           }
         } else {
-          setNowPlaying(null);
-          gsap.to(grainUniforms, { uIntensity: 0.0, uSpeed: 0.0, duration: 3, onUpdate: updateGrainStore });
+          setNowPlaying(track);
+          gsap.to(grainUniforms, { uIntensity: 0.025, uSpeed: 0.3, duration: 3, onUpdate: updateGrainStore });
         }
       } catch (err) {}
     }

@@ -21,22 +21,33 @@ export default function SmoothScrollProvider({ children }: { children: ReactNode
       touchMultiplier: 2,
     });
     const setVelocity = useScrollStore.getState().setVelocity;
-    const velocityTracker = { value: 0 };
+    let currentVelocity = 0;
+
     lenis.on('scroll', (e: any) => {
       ScrollTrigger.update();
-      const v = Math.min(Math.abs(e.velocity) / 80, 1.0);
-      setVelocity(v);
-      gsap.to(velocityTracker, {
-        value: 0, duration: 1.2, ease: 'expo.out', overwrite: true,
-        onUpdate: () => setVelocity(velocityTracker.value),
-      });
-      velocityTracker.value = v;
+      const computedVelocity = Math.min(Math.abs(e.velocity) / 30, 2.0);
+      if (computedVelocity > currentVelocity) {
+        currentVelocity = computedVelocity;
+      }
     });
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
+
+    const updateFrame = (time: number) => {
+      lenis.raf(time * 1000);
+      
+      // Natural spring-like decay towards rest
+      currentVelocity += (0.0 - currentVelocity) * 0.07;
+      if (currentVelocity < 0.001) {
+        currentVelocity = 0.0;
+      }
+      setVelocity(currentVelocity);
+    };
+
+    gsap.ticker.add(updateFrame);
     gsap.ticker.lagSmoothing(0);
+
     return () => {
       lenis.destroy();
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      gsap.ticker.remove(updateFrame);
     };
   }, []);
   return <>{children}</>;

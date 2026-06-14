@@ -3,13 +3,12 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useRef, useMemo, useEffect } from 'react';
 import useLastFmStore from '@/store/useLastFmStore';
-import { Sphere } from './Sphere';
 
 const vertexShader = `
 varying vec2 vUv;
 void main() {
   vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  gl_Position = vec4(position, 1.0);
 }
 `;
 
@@ -69,10 +68,15 @@ function GrainPlane() {
 
 export default function BackgroundCanvas() {
   return (
-    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 100 }}>
-      <Canvas camera={{ position: [0, 0, 5], fov: 45 }} gl={{ preserveDrawingBuffer: false, antialias: false, alpha: true }} dpr={[1, 2]}>
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 100, pointerEvents: 'none' }}>
+      <Canvas
+        orthographic
+        style={{ pointerEvents: 'none' }}
+        camera={{ left: -1, right: 1, top: 1, bottom: -1, near: 0, far: 1 }}
+        gl={{ preserveDrawingBuffer: false, antialias: false, alpha: true }}
+        dpr={[1, 1.5]}
+      >
         <GrainPlane />
-        <Sphere />
       </Canvas>
     </div>
   );

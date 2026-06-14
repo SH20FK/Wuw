@@ -18,12 +18,12 @@ export function Button({ children, variant = 'filled', href, onClick, className 
   };
   const inner = (
     <>
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 transition-colors duration-300 group-hover:text-bg">{children}</span>
       {variant === 'outlined' && (
         <motion.div className="absolute inset-0 bg-accent origin-bottom" initial={{ scaleY: 0 }} whileHover={{ scaleY: 1 }} transition={spring.snappy} />
       )}
       {variant === 'filled' && (
-        <motion.div className="absolute inset-0 bg-white/20 origin-bottom" initial={{ scaleY: 0 }} whileHover={{ scaleY: 1 }} transition={spring.snappy} />
+        <motion.div className="absolute inset-0 bg-surface origin-bottom" initial={{ scaleY: 0 }} whileHover={{ scaleY: 1 }} transition={spring.snappy} />
       )}
     </>
   );

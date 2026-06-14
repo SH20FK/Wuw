@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { spring, stagger } from '@/lib/animations';
 import { Button } from '@/components/ui/Button';
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const HeroCanvas = dynamic(() => import('@/components/three/HeroCanvas'), { ssr: false });
 
 export function Hero({ onLoadingComplete }: { onLoadingComplete: () => void }) {
   const [loaded, setLoaded] = useState(false);
@@ -13,6 +16,7 @@ export function Hero({ onLoadingComplete }: { onLoadingComplete: () => void }) {
 
   return (
     <section className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center">
+      <HeroCanvas />
       {loaded && (
         <motion.div variants={stagger.container} initial="hidden" animate="visible" className="relative z-10 flex flex-col items-center text-center mt-[-10vh]">
           <motion.h1 variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { ...spring.slow, delay: 0.9 } } }} className="font-display text-[clamp(4rem,10vw,8rem)] leading-none tracking-tight text-text">

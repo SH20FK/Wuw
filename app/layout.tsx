@@ -6,6 +6,7 @@ import SmoothScrollProvider from '@/components/global/SmoothScrollProvider';
 import { NavBar } from '@/components/ui/NavBar';
 import { NowPlayingFAB } from '@/components/ui/NowPlayingFAB';
 import { ClientBoot } from '@/components/global/ClientBoot';
+import { InkBleedTransition } from '@/components/global/InkBleedTransition';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display' });
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScrollProvider>
           <BackgroundWrapper />
           <NavBar />
-          {children}
+          <InkBleedTransition>{children}</InkBleedTransition>
           <NowPlayingFAB />
         </SmoothScrollProvider>
       </body>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { getTrackImage } from '@/lib/utils';
 
 export function NowPlayingFAB() {
   const { nowPlaying } = useLastFmStore();
@@ -22,8 +23,8 @@ export function NowPlayingFAB() {
           className="fixed bottom-6 right-6 z-40 h-[52px] rounded-[26px] bg-surface/80 border border-[rgba(184,173,158,0.12)] backdrop-blur-[12px] px-4 flex items-center gap-3 cursor-pointer"
         >
           <div className="relative w-8 h-8 rounded-md overflow-hidden shrink-0">
-            {nowPlaying.image?.[0]?.['#text'] ? (
-              <Image src={nowPlaying.image[1]['#text'] || nowPlaying.image[0]['#text']} alt="cover" fill className="object-cover" />
+            {getTrackImage(nowPlaying) ? (
+              <Image src={getTrackImage(nowPlaying)} alt="cover" fill className="object-cover" referrerPolicy="no-referrer" />
             ) : <div className="w-full h-full bg-surface-2" />}
             <motion.div
               animate={{ opacity: [1, 0.3, 1] }}

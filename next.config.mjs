@@ -6,8 +6,7 @@ const nextConfig = {
   output: 'standalone',
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'picsum.photos' },
-      { protocol: 'https', hostname: 'lastfm.freetls.fastly.net' }
+      { protocol: 'https', hostname: '**' }
     ]
   }
 };
