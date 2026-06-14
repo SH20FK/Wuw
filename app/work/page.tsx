@@ -8,10 +8,46 @@ import { useEffect, useRef } from 'react';
 import { useState } from 'react';
 
 const projects: Project[] = [
-  { id: '1', year: '2025', type: 'WEB', title: 'Victor Sin Portfolio', description: 'A study on visual aesthetic, grain, and muted palettes.', image: 'https://picsum.photos/seed/p1/800/450', url: '#', tags: ['WebGL', 'Next.js'] },
-  { id: '2', year: '2024', type: 'WEB', title: 'Scroll Driven 3D World', description: 'Implementation of the Ink Bleed transition technique.', image: 'https://picsum.photos/seed/p2/800/450', url: '#', tags: ['GSAP', 'GLSL'] },
-  { id: '3', year: '2024', type: 'MOD', title: 'Minecraft WebUI', description: 'React-driven interfaces injected directly into the game client.', image: 'https://picsum.photos/seed/p3/800/450', url: '#', tags: ['React', 'Java'] },
-  { id: '4', year: '2023', type: 'UTIL', title: 'Velocity Warp', description: 'Distorting reality based on how fast you scroll down the page.', image: 'https://picsum.photos/seed/p4/800/450', url: '#', tags: ['Three.js'] }
+  { 
+    id: '1', 
+    year: '2025', 
+    type: 'WEB', 
+    title: 'NiosCraft Web Launcher', 
+    description: 'Индивидуальный игровой лаунчер с веб-панелью, современным личным кабинетом игрока и бесшовной подгрузкой игровых ресурсов.', 
+    image: 'https://picsum.photos/seed/nios/800/450', 
+    url: 'https://nioscraft.ru', 
+    tags: ['Next.js', 'Electron', 'TypeScript'] 
+  },
+  { 
+    id: '2', 
+    year: '2025', 
+    type: 'WEB', 
+    title: 'Music Hub / Last.fm Widget', 
+    description: 'Адаптивный музыкальный центр с интеграцией Last.fm API, автоопределением цвета обложек, графиком скроблинга и резервной базой iTunes/Deezer.', 
+    image: 'https://picsum.photos/seed/music/800/450', 
+    url: '/music', 
+    tags: ['Last.fm API', 'Framer Motion', 'Tailwind'] 
+  },
+  { 
+    id: '3', 
+    year: '2024', 
+    type: 'MOD', 
+    title: 'NiosCraft Client Overlays', 
+    description: 'Реактивные внутриигровые интерфейсы и дисплеи статистики, встраиваемые непосредственно в JVM-клиенты Forge/Fabric.', 
+    image: 'https://picsum.photos/seed/minecraft/800/450', 
+    url: 'https://nioscraft.ru', 
+    tags: ['Java', 'Forge', 'Fabric'] 
+  },
+  { 
+    id: '4', 
+    year: '2024', 
+    type: 'UTIL', 
+    title: 'Velocity Warp Shaders', 
+    description: 'Комплекс WebGL шейдеров: эффект растягивания при прокрутке и переход страниц методом просачивания чернил (Ink Bleed).', 
+    image: 'https://picsum.photos/seed/shader/800/450', 
+    url: '/', 
+    tags: ['Three.js', 'GLSL', 'GSAP'] 
+  }
 ];
 
 export default function WorkPage() {
@@ -108,18 +144,33 @@ export default function WorkPage() {
   }, [category]);
 
   return (
-    <main className="w-full overflow-x-hidden font-body">
-      <section ref={sectionRef} className="relative min-h-[90vh] md:h-screen w-full overflow-hidden bg-bg flex flex-col md:flex-row items-center justify-center pt-24 md:pt-0">
-        <div className="absolute top-24 left-8 md:left-16 z-20 pointer-events-none">
+    <main className="w-full overflow-x-hidden font-body bg-bg min-h-screen">
+      <section ref={sectionRef} className="relative min-h-screen w-full bg-bg flex flex-col pt-24 md:pt-0">
+        {/* Section header & Category filters */}
+        <div className="md:absolute top-24 left-8 md:left-16 z-20 px-8 py-4 md:px-0 md:py-0">
           <SectionLabel>/ 03 WORK</SectionLabel>
-          <div className="flex gap-4 font-mono text-xs md:text-sm text-text-muted mt-2 pointer-events-auto">
+          <div className="flex gap-4 font-mono text-xs md:text-sm text-text-muted mt-2 flex-wrap">
             <button onClick={() => handleCategoryChange('ALL')} className={`${category === 'ALL' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Все</button>
             <button onClick={() => handleCategoryChange('WEB')} className={`${category === 'WEB' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Web</button>
             <button onClick={() => handleCategoryChange('MOD')} className={`${category === 'MOD' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Моды</button>
             <button onClick={() => handleCategoryChange('UTIL')} className={`${category === 'UTIL' ? 'text-accent font-semibold' : 'hover:text-accent'} transition-colors`}>Утилиты</button>
           </div>
         </div>
-        <div className="w-full h-full md:absolute md:inset-0 flex items-center overflow-x-auto md:overflow-x-hidden snap-x snap-mandatory md:snap-none scrollbar-none py-12 md:py-0">
+
+        {/* Mobile View: Vertical scrollable layout for clean stacking on touch screen devices */}
+        <div className="block md:hidden w-full px-6 pb-24 pt-6 z-10">
+          <div className="flex flex-col gap-6">
+            {filteredProjects.map((p) => (
+              <ProjectCard key={p.id} project={p} />
+            ))}
+            <div className="w-full py-12 px-6 border border-dashed border-[rgba(184,173,158,0.15)] rounded-lg flex items-center justify-center font-mono text-xs text-text-muted">
+              В разработке...
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop View: Horizontal scroll-hijacked gallery pinned by GSAP */}
+        <div className="hidden md:flex w-full h-full md:absolute md:inset-0 items-center overflow-x-hidden py-12 md:py-0">
           <div ref={trackRef} className="flex items-center px-6 md:px-[30vw] gap-4 md:gap-0 h-full">
             {filteredProjects.map((p) => <ProjectCard key={p.id} project={p} />)}
             <div className="w-[85vw] md:w-[420px] shrink-0 mx-4 h-[350px] md:h-[450px] border border-dashed border-[rgba(184,173,158,0.15)] rounded-lg flex items-center justify-center font-mono text-xs md:text-sm text-text-muted snap-center">В разработке...</div>

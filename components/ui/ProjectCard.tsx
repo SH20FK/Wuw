@@ -50,7 +50,7 @@ export function ProjectCard({ project }: { project: Project }) {
   }, []);
 
   return (
-    <div ref={cardRef} className="project-card w-[85vw] md:w-[420px] shrink-0 mx-4 cursor-pointer group" style={{ transformStyle: 'preserve-3d' }}>
+    <div ref={cardRef} className="project-card w-full md:w-[420px] md:shrink-0 md:mx-4 cursor-pointer group" style={{ transformStyle: 'preserve-3d' }}>
       <div ref={tiltContainerRef} className="w-full h-full bg-surface border border-[rgba(184,173,158,0.07)] rounded-lg overflow-hidden transition-colors duration-300 hover:border-[rgba(184,173,158,0.18)] flex flex-col" style={{ transformStyle: 'preserve-3d' }}>
         <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_center,rgba(184,173,158,0.04),transparent)]" />
         <div className="w-full aspect-[16/9] bg-surface-2 rounded-t-lg overflow-hidden relative">

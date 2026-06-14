@@ -30,6 +30,70 @@ async function fetchiTunesArtwork(artist: string, trackName: string): Promise<st
   return null;
 }
 
+async function fetchDeezerArtwork(artist: string, trackName: string): Promise<string | null> {
+  try {
+    const query = `${artist} ${trackName}`;
+    const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=3`;
+    const res = await fetch(url, { next: { revalidate: 86400 } });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data && json.data.length > 0) {
+        const bestMatch = json.data.find((item: any) => 
+          item.artist?.name?.toLowerCase().includes(artist.toLowerCase()) ||
+          artist.toLowerCase().includes(item.artist?.name?.toLowerCase())
+        ) || json.data[0];
+
+        const coverUrl = bestMatch.album?.cover_xl || bestMatch.album?.cover_big || bestMatch.album?.cover_medium;
+        if (coverUrl) return coverUrl;
+      }
+    }
+  } catch (e) {
+    console.error('Deezer API fallback fetch error:', e);
+  }
+  return null;
+}
+
+async function fetchMusicBrainzArtwork(artist: string, trackName: string): Promise<string | null> {
+  try {
+    const query = `artist:"${artist}" AND recording:"${trackName}"`;
+    const url = `https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(query)}&fmt=json`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'SH20FK-Portfolio/1.0.0 ( salamatinsana111@gmail.com )' },
+      next: { revalidate: 86400 }
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.recordings && json.recordings.length > 0) {
+        for (const rec of json.recordings) {
+          if (rec.releases && rec.releases.length > 0) {
+            for (const rel of rec.releases) {
+              if (rel.id) {
+                return `https://coverartarchive.org/release/${rel.id}/front`;
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('MusicBrainz API fallback fetch error:', e);
+  }
+  return null;
+}
+
+async function getFallbackArtwork(artist: string, trackName: string): Promise<string | null> {
+  let cover = await fetchiTunesArtwork(artist, trackName);
+  if (cover) return cover;
+
+  cover = await fetchDeezerArtwork(artist, trackName);
+  if (cover) return cover;
+
+  cover = await fetchMusicBrainzArtwork(artist, trackName);
+  if (cover) return cover;
+
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   if (!API_KEY) return NextResponse.json({ error: 'Last.fm API key missing' }, { status: 500 });
   const { searchParams } = new URL(req.url);
@@ -59,7 +123,7 @@ export async function GET(req: NextRequest) {
         if (isMissingOrPlaceholderCover(currentCover)) {
           const artistName = t.artist?.['#text'] || '';
           const trackName = t.name || '';
-          const newCover = await fetchiTunesArtwork(artistName, trackName);
+          const newCover = await getFallbackArtwork(artistName, trackName);
           if (newCover) {
             if (t.image && Array.isArray(t.image)) {
               t.image = t.image.map((img: any) => ({ ...img, '#text': newCover }));
@@ -80,7 +144,7 @@ export async function GET(req: NextRequest) {
         if (isMissingOrPlaceholderCover(currentCover)) {
           const artistName = t.artist?.name || '';
           const trackName = t.name || '';
-          const newCover = await fetchiTunesArtwork(artistName, trackName);
+          const newCover = await getFallbackArtwork(artistName, trackName);
           if (newCover) {
             if (t.image && Array.isArray(t.image)) {
               t.image = t.image.map((img: any) => ({ ...img, '#text': newCover }));
