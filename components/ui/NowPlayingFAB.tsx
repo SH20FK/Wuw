@@ -1,6 +1,6 @@
 'use client';
 import useLastFmStore from '@/store/useLastFmStore';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';

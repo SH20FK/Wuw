@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { spring } from '@/lib/animations';
 
 export function TechChip({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,7 @@
 import useLastFmStore from '@/store/useLastFmStore';
 import { extractDominantColor } from '@/lib/colorExtract';
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 import Image from 'next/image';
 

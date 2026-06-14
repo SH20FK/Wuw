@@ -1,7 +1,7 @@
 'use client';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 
 export default function ContactPage() {

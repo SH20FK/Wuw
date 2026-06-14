@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { spring, stagger } from '@/lib/animations';
 import { Button } from '@/components/ui/Button';
 import { useEffect, useState } from 'react';
