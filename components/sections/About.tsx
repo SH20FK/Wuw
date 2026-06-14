@@ -5,6 +5,9 @@ import useLastFmStore from '@/store/useLastFmStore';
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
+import Image from 'next/image';
+import { getTrackImage } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const stack = ['React', 'Three.js', 'GSAP', 'Next.js', 'TypeScript', 'Framer Motion', 'Zustand', 'HTML/CSS', 'Tailwind'];
 const interests = ['Minecraft Modding', 'Russian Rap', 'Anime'];
@@ -39,20 +42,95 @@ export function About() {
               <div className="flex items-center gap-2 font-mono text-xs text-text-dim"><span className="text-text-muted">▸</span> Chelyabinsk, RU</div>
             </div>
             <div className="w-full h-px bg-[rgba(184,173,158,0.1)] my-4" />
-            <div className="flex items-center gap-3">
-              <div className="w-[60px] h-[16px] rounded bg-bg relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 opacity-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
-              </div>
-              <div className="font-mono text-xs text-text-muted truncate max-w-[150px]">🎵 {nowPlaying ? nowPlaying.name : 'Silence'}</div>
+            <div className="flex items-center gap-3 min-h-[44px]">
+              {nowPlaying ? (
+                <div className="flex items-center gap-3.5 w-full">
+                  <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border border-accent/20 animate-spin bg-surface-2" style={{ animationDuration: '8s' }}>
+                    {getTrackImage(nowPlaying) ? (
+                      <Image src={getTrackImage(nowPlaying)} alt="cover" fill className="object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-full h-full bg-accent-sub" />
+                    )}
+                  </div>
+                  <div className="flex flex-col truncate flex-1 py-0.5 min-w-0">
+                    <div className="flex items-center gap-1.5 font-mono text-[9px] text-accent tracking-widest uppercase font-semibold">
+                      <span className="relative flex h-1.5 w-1.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent"></span>
+                      </span>
+                      Слушаю сейчас
+                    </div>
+                    <div className="font-mono text-xs text-text truncate max-w-[200px] leading-normal font-medium">{nowPlaying.name}</div>
+                    <div className="font-mono text-[9.5px] text-text-muted truncate max-w-[200px] leading-normal">{nowPlaying.artist?.['#text'] || 'Неизвестный исполнитель'}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3.5 w-full">
+                  <div className="w-9 h-9 rounded-full bg-[rgba(184,173,158,0.05)] border border-[rgba(184,173,158,0.1)] flex items-center justify-center text-xs text-text-muted shrink-0">
+                    💤
+                  </div>
+                  <div className="flex flex-col py-0.5">
+                    <div className="font-mono text-[9px] text-text-muted tracking-widest uppercase font-semibold">Offline</div>
+                    <div className="font-mono text-xs text-text-muted leading-normal">Тишина в эфире</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div ref={rightColRef} className="flex flex-col">
-          <p className="font-body text-base text-text-dim leading-relaxed">Привет, я Александр. Занимаюсь фронтендом. Люблю, когда всё двигается правильно, а интерфейсы ощущаются физически. Создаю сайты, где производительность и плавность не конфликтуют с дизайном.</p>
-          <h4 className="font-mono text-sm text-text-muted uppercase mt-12 mb-4 tracking-wider">Стек</h4>
-          <div className="flex flex-wrap gap-2">{stack.map(item => <TechChip key={item}>{item}</TechChip>)}</div>
-          <h4 className="font-mono text-sm text-text-muted uppercase mt-12 mb-4 tracking-wider">Интересы</h4>
-          <div className="flex flex-wrap gap-2">{interests.map(item => <TechChip key={item}>{item}</TechChip>)}</div>
+          <p className="font-body text-base text-text-dim leading-relaxed">Привет, я Александр (SH20FK). Занимаюсь фронтендом и творческой разработкой интерфейсов. Люблю, когда всё двигается правильно, а интерфейсы ощущаются физически. Создаю кастомные веб-системы, лаунчеры и игровые моды, где производительность и плавность не конфликтуют с дизайном.</p>
+          
+          <div className="mt-12 flex flex-col gap-8">
+            <div>
+              <h4 className="font-mono text-[10px] text-accent tracking-widest uppercase mb-4 font-semibold">01 / Технологический стек</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 flex flex-col justify-between">
+                  <div>
+                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">Core Web / Фронтенд</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['React', 'Next.js 14/15', 'TypeScript', 'Tailwind CSS'].map(item => <TechChip key={item}>{item}</TechChip>)}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 flex flex-col justify-between">
+                  <div>
+                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">3D & Анимации</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Three.js', 'R3F / Fiber', 'GSAP 3', 'Framer Motion'].map(item => <TechChip key={item}>{item}</TechChip>)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-mono text-[10px] text-accent tracking-widest uppercase mb-4 font-semibold">02 / Инструменты и Стейт</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 col-span-1 sm:col-span-2">
+                  <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">Инфраструктура и Логика</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Zustand', 'Git / GitHub', 'ESLint / Prettier', 'GLSL / Шейдеры', 'Web Audio API'].map(item => <TechChip key={item}>{item}</TechChip>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-mono text-[10px] text-text-muted tracking-widest uppercase mb-4 font-semibold">03 / Специальные интересы</h4>
+              <div className="flex flex-wrap gap-2">
+                {interests.map(item => (
+                  <motion.div
+                    key={item}
+                    whileHover={{ scale: 1.05 }}
+                    className="font-mono text-xs text-text-dim bg-surface border border-[rgba(184,173,158,0.06)] rounded-lg px-4 py-2 hover:border-accent/15 hover:text-accent cursor-default transition-all duration-300"
+                  >
+                    {item}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

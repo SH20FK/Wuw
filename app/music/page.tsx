@@ -328,7 +328,7 @@ function MusicDashboard() {
         <div className="bg-surface border border-[rgba(184,173,158,0.07)] p-6 md:p-8 rounded-2xl relative overflow-hidden shadow-xl min-h-[460px] flex flex-col">
           <div className="absolute top-0 right-0 w-48 h-48 bg-accent/2 rounded-full blur-[60px] pointer-events-none" />
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {loadingCharts ? (
               <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center">
                 <div className="w-8 h-8 border-t-2 border-accent rounded-full animate-spin" />
@@ -336,10 +336,10 @@ function MusicDashboard() {
             ) : activeTab === 'artists' ? (
               <motion.div 
                 key="artists" 
-                initial={{ opacity: 0, x: 10 }} 
-                animate={{ opacity: 1, x: 0 }} 
-                exit={{ opacity: 0, x: -10 }} 
-                transition={spring.snappy}
+                initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }} 
+                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }} 
+                exit={{ opacity: 0, x: 30, filter: 'blur(4px)' }} 
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 className="flex flex-col gap-4 flex-1"
               >
                 <div className="flex flex-col mb-2">
@@ -398,10 +398,10 @@ function MusicDashboard() {
             ) : (
               <motion.div 
                 key="tracks" 
-                initial={{ opacity: 0, x: 10 }} 
-                animate={{ opacity: 1, x: 0 }} 
-                exit={{ opacity: 0, x: -10 }} 
-                transition={spring.snappy}
+                initial={{ opacity: 0, x: 30, filter: 'blur(4px)' }} 
+                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }} 
+                exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }} 
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 className="flex flex-col gap-4 flex-1"
               >
                 <div className="flex flex-col mb-2">
