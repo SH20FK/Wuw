@@ -78,7 +78,7 @@ export default function ContactPage() {
             { label: 'Last.fm', handle: 'SH20FK', icon: <Music className="w-4 h-4 text-accent" />, url: 'https://www.last.fm/user/SH20FK' },
             { label: 'Steam', handle: 'SH20FK', icon: <Gamepad2 className="w-4 h-4 text-accent" />, url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
           ].map(c => (
-            <a href={c.url} target="_blank" rel="noopener noreferrer" key={c.label} className="bg-surface border border-[rgba(184,173,158,0.08)] rounded-lg px-5 py-4 flex items-center gap-4 hover:border-[rgba(184,173,158,0.2)] hover:-translate-y-0.5 transition-all text-left group cursor-pointer block">
+            <a href={c.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" key={c.label} className="bg-surface border border-[rgba(184,173,158,0.08)] rounded-lg px-5 py-4 flex items-center gap-4 hover:border-[rgba(184,173,158,0.2)] hover:-translate-y-0.5 transition-all text-left group cursor-pointer block">
               <div className="flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">{c.icon}</div>
               <div className="flex flex-col">
                 <span className="font-mono text-xs text-text-muted">{c.label}</span>
