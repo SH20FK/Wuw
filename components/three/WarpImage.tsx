@@ -1,8 +1,9 @@
 'use client';
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useScrollStore from '@/store/useScrollStore';
+import Image from 'next/image';
 
 const vertexShader = `
 uniform float uVelocity;
@@ -47,7 +48,34 @@ function PlaneImage({ src }: { src: string }) {
   );
 }
 
+function isWebGLAvailable() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 export function WarpImage({ src, alt }: { src: string, alt: string }) {
+  const [hasWebGL, setHasWebGL] = useState(true);
+
+  useEffect(() => {
+    setHasWebGL(isWebGLAvailable());
+  }, []);
+
+  if (!hasWebGL) {
+    return (
+      <div className="w-full h-full relative overflow-hidden">
+        <Image src={src} alt={alt} fill className="object-cover" referrerPolicy="no-referrer" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full relative overflow-hidden">
       <Canvas camera={{ position: [0, 0, 1], fov: 90 }} gl={{ alpha: true, antialias: false }} className="w-full h-full">

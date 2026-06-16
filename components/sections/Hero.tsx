@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { spring, stagger } from '@/lib/animations';
 import { Button } from '@/components/ui/Button';
@@ -9,8 +9,26 @@ import useScrollStore from '@/store/useScrollStore';
 
 const HeroCanvas = dynamic(() => import('@/components/three/HeroCanvas'), { ssr: false });
 
+function isWebGLAvailable() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 export function Hero() {
   const h1Ref = useRef<HTMLHeadingElement>(null);
+  const [hasWebGL, setHasWebGL] = useState(true);
+
+  useEffect(() => {
+    setHasWebGL(isWebGLAvailable());
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -43,7 +61,7 @@ export function Hero() {
 
   return (
     <section className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center">
-      <HeroCanvas />
+      {hasWebGL && <HeroCanvas />}
       <motion.div variants={stagger.container} initial="hidden" animate="visible" className="relative z-10 flex flex-col items-center text-center mt-[-8vh] px-6 select-none">
         <motion.h1 
           ref={h1Ref}

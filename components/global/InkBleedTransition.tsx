@@ -94,6 +94,19 @@ function TransitionPlane({ progressRef }: TransitionPlaneProps) {
   );
 }
 
+function isWebGLAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 export function InkBleedTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [displayChildren, setDisplayChildren] = useState<ReactNode>(children);
@@ -103,10 +116,11 @@ export function InkBleedTransition({ children }: { children: ReactNode }) {
   const previousPathnameRef = useRef(pathname);
 
   useEffect(() => {
-    // Check if prefers-reduced-motion is true OR if it is a mobile device (touch or small viewport)
+    // Check if prefers-reduced-motion is true OR if it is a mobile device (touch or small viewport) OR WebGL is missing
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    if (mediaQuery.matches || isMobile) {
+    const noWebGL = !isWebGLAvailable();
+    if (mediaQuery.matches || isMobile || noWebGL) {
       setUseFallback(true);
     }
   }, []);
