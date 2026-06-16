@@ -12,7 +12,6 @@ export function ClientBoot() {
     const root = document.documentElement;
     root.style.setProperty('--color-accent', accentColor);
     
-    // Calculate and apply glows
     let r = 230, g = 28, b = 28;
     if (accentColor.startsWith('rgb')) {
       const parts = accentColor.match(/\d+/g);
@@ -31,8 +30,6 @@ export function ClientBoot() {
     }
     
     root.style.setProperty('--color-accent-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-    // Calibrate secondary/sub-accent based on the extracted color
-    // Let's make it a slightly desaturated steel version of the dominant color
     const sr = Math.max(0, Math.floor(r * 0.7));
     const sg = Math.max(0, Math.floor(g * 0.73));
     const sb = Math.max(0, Math.floor(b * 0.8));
@@ -42,3 +39,4 @@ export function ClientBoot() {
 
   return null;
 }
+

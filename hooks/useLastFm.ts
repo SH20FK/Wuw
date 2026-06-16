@@ -21,26 +21,22 @@ export function useLastFm() {
         if (!tracks || tracks.length === 0) return;
         const track = tracks[0];
         
-        // Forward user play statistics (total scrobble counts) to nowPlaying context
         if (data?.recenttracks?.['@attr']) {
           track.userStats = data.recenttracks['@attr'];
         }
         
-        // Let's set the track
         setNowPlaying(track);
 
         const isPlaying = track['@attr']?.nowplaying === 'true';
         
-        // Resolve cover art and extract dominate accent color
         const coverUrl = getTrackImage(track);
         if (isPlaying && coverUrl) {
           getAverageColor(coverUrl).then((color) => {
             setAccentColor(color);
           }).catch(() => {
-            setAccentColor('#D97757'); // fallback to terracotta orange
+            setAccentColor('#D97757');
           });
 
-          // Adjust visual grain
           const artist = track.artist['#text']?.toLowerCase() || '';
           const isHeavy = ['mzlff', 'слава кпсс', 'pyrokinesis', 'shadowraze'].some(a => artist.includes(a));
           if (isHeavy) {
@@ -49,12 +45,10 @@ export function useLastFm() {
             gsap.to(grainUniforms, { uIntensity: 0.045, uSpeed: 1.0, duration: 2, onUpdate: updateGrainStore });
           }
         } else {
-          // If paused, track is offline/idle -> Fallback to terracotta orange
           setAccentColor('#D97757'); 
           gsap.to(grainUniforms, { uIntensity: 0.025, uSpeed: 0.3, duration: 3, onUpdate: updateGrainStore });
         }
       } catch (err) {
-        // Safe fallback on network failure
         setAccentColor('#D97757');
       }
     }
