@@ -6,6 +6,7 @@ import SmoothScrollProvider from '@/components/global/SmoothScrollProvider';
 import { NavBar } from '@/components/ui/NavBar';
 import { NowPlayingFAB } from '@/components/ui/NowPlayingFAB';
 import { ClientBoot } from '@/components/global/ClientBoot';
+import { CustomCursor } from '@/components/ui/CustomCursor';
 import { InkBleedTransition } from '@/components/global/InkBleedTransition';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <body suppressHydrationWarning className="font-body text-text bg-bg antialiased selection:bg-accent selection:text-bg">
         <ClientBoot />
+        <CustomCursor />
         <SmoothScrollProvider>
           <BackgroundWrapper />
           <NavBar />

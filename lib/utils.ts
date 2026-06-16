@@ -41,3 +41,90 @@ export function getTrackImage(track: any): string {
   const fallbackImg = track.image[track.image.length - 1]?.['#text'] || '';
   return fallbackImg;
 }
+
+export function getAverageColor(imgUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      return resolve('#E61C1C');
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    // Use local proxy to completely avoid CORS issues on client-side Image/Canvas loading
+    img.src = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve('#E61C1C');
+      canvas.width = 16;
+      canvas.height = 16;
+      ctx.drawImage(img, 0, 0, 16, 16);
+      try {
+        const data = ctx.getImageData(0, 0, 16, 16).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        
+        // Filter out extreme black, white, and high-grayscale overlay pixels to capture pure cover art color
+        for (let i = 0; i < data.length; i += 4) {
+          const red = data[i];
+          const green = data[i + 1];
+          const blue = data[i + 2];
+          const alpha = data[i + 3];
+          
+          if (alpha < 100) continue;
+          
+          const maxVal = Math.max(red, green, blue);
+          const minVal = Math.min(red, green, blue);
+          const diff = maxVal - minVal;
+          
+          // Color saturation requirement (diff of at least 15 RGB levels helps exclude flat grey/black/white)
+          if (diff > 15 && maxVal > 30) {
+            r += red;
+            g += green;
+            b += blue;
+            count++;
+          }
+        }
+        
+        if (count === 0) {
+          // If no highly saturated pixels exist (e.g. monochromatic covers), average non-black pixels
+          for (let i = 0; i < data.length; i += 4) {
+            const red = data[i];
+            const green = data[i + 1];
+            const blue = data[i + 2];
+            const alpha = data[i + 3];
+            if (alpha > 100 && (red + green + blue > 30)) {
+              r += red;
+              g += green;
+              b += blue;
+              count++;
+            }
+          }
+        }
+        
+        if (count === 0) {
+          return resolve('#E61C1C');
+        }
+        
+        r = Math.floor(r / count);
+        g = Math.floor(g / count);
+        b = Math.floor(b / count);
+        
+        // Enhance brightness and saturation specifically for rendering over dark UI elements (#0E0C0F)
+        const max = Math.max(r, g, b);
+        if (max < 140) {
+          const boostFactor = 160 / (max || 1);
+          r = Math.min(255, Math.floor(r * boostFactor));
+          g = Math.min(255, Math.floor(g * boostFactor));
+          b = Math.min(255, Math.floor(b * boostFactor));
+        }
+        
+        resolve(`rgb(${r}, ${g}, ${b})`);
+      } catch (e) {
+        resolve('#E61C1C');
+      }
+    };
+    img.onerror = () => {
+      resolve('#E61C1C');
+    };
+  });
+}

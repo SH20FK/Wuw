@@ -1,10 +1,11 @@
 'use client';
 import { useEffect } from 'react';
 import useLastFmStore from '@/store/useLastFmStore';
+import { getTrackImage, getAverageColor } from '@/lib/utils';
 import gsap from 'gsap';
 
 export function useLastFm() {
-  const { setNowPlaying } = useLastFmStore();
+  const { setNowPlaying, setAccentColor } = useLastFmStore();
   
   useEffect(() => {
     const grainUniforms = { uIntensity: 0.035, uSpeed: 1.0 };
@@ -19,10 +20,22 @@ export function useLastFm() {
         const tracks = data?.recenttracks?.track;
         if (!tracks || tracks.length === 0) return;
         const track = tracks[0];
+        
+        // Let's set the track
+        setNowPlaying(track);
+
         const isPlaying = track['@attr']?.nowplaying === 'true';
         
-        if (isPlaying) {
-          setNowPlaying(track);
+        // Resolve cover art and extract dominate accent color
+        const coverUrl = getTrackImage(track);
+        if (isPlaying && coverUrl) {
+          getAverageColor(coverUrl).then((color) => {
+            setAccentColor(color);
+          }).catch(() => {
+            setAccentColor('#E61C1C'); // fallback to Kino Red
+          });
+
+          // Adjust visual grain
           const artist = track.artist['#text']?.toLowerCase() || '';
           const isHeavy = ['mzlff', 'слава кпсс', 'pyrokinesis', 'shadowraze'].some(a => artist.includes(a));
           if (isHeavy) {
@@ -31,10 +44,14 @@ export function useLastFm() {
             gsap.to(grainUniforms, { uIntensity: 0.045, uSpeed: 1.0, duration: 2, onUpdate: updateGrainStore });
           }
         } else {
-          setNowPlaying(track);
+          // If paused, track is offline/idle -> Fallback to Kino Red
+          setAccentColor('#E61C1C'); 
           gsap.to(grainUniforms, { uIntensity: 0.025, uSpeed: 0.3, duration: 3, onUpdate: updateGrainStore });
         }
-      } catch (err) {}
+      } catch (err) {
+        // Safe fallback on network failure
+        setAccentColor('#E61C1C');
+      }
     }
 
     const interval = setInterval(pollLastFm, 30_000);
@@ -46,5 +63,5 @@ export function useLastFm() {
       clearInterval(interval);
       if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [setNowPlaying]);
+  }, [setNowPlaying, setAccentColor]);
 }

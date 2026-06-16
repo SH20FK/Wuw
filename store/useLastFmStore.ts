@@ -6,6 +6,8 @@ interface LastFmState {
   setGrain: (intensity: number, speed: number) => void;
   nowPlaying: any | null;
   setNowPlaying: (track: any | null) => void;
+  accentColor: string;
+  setAccentColor: (color: string) => void;
 }
 
 const useLastFmStore = create<LastFmState>((set) => ({
@@ -14,6 +16,8 @@ const useLastFmStore = create<LastFmState>((set) => ({
   setGrain: (intensity, speed) => set({ grainIntensity: intensity, grainSpeed: speed }),
   nowPlaying: null,
   setNowPlaying: (track) => set({ nowPlaying: track }),
+  accentColor: '#E61C1C', // Fallback red (from Kino - Legend)
+  setAccentColor: (color) => set({ accentColor: color }),
 }));
 
 export default useLastFmStore;
