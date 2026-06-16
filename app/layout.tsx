@@ -8,6 +8,8 @@ import { NowPlayingFAB } from '@/components/ui/NowPlayingFAB';
 import { ClientBoot } from '@/components/global/ClientBoot';
 import { CustomCursor } from '@/components/ui/CustomCursor';
 import { InkBleedTransition } from '@/components/global/InkBleedTransition';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display' });
@@ -30,6 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <InkBleedTransition>{children}</InkBleedTransition>
           <NowPlayingFAB />
         </SmoothScrollProvider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

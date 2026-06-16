@@ -53,7 +53,7 @@ export function useLastFm() {
       }
     }
 
-    const interval = setInterval(pollLastFm, 30_000);
+    const interval = setInterval(pollLastFm, 10_000);
     pollLastFm();
     const handleVisibilityChange = () => { if (typeof document !== 'undefined' && document.visibilityState === 'visible') pollLastFm(); };
     if (typeof document !== 'undefined') document.addEventListener('visibilitychange', handleVisibilityChange);
