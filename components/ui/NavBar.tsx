@@ -24,11 +24,11 @@ export function NavBar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${scrolled ? 'backdrop-blur-[20px] bg-[rgba(14,12,15,0.7)] border-b border-[rgba(184,173,158,0.08)]' : ''}`}>
-      <div className="max-w-[1200px] mx-auto py-4 px-8 flex items-center justify-between">
+      <div className="max-w-[1200px] mx-auto py-4 px-4 sm:px-8 flex items-center justify-between">
         <Magnetic>
           <Link href="/" className="font-mono text-accent inline-block p-1">[SH20FK]</Link>
         </Magnetic>
-        <div className="flex items-center gap-5 md:gap-8">
+        <div className="flex items-center gap-2.5 sm:gap-5 md:gap-8">
           {LINKS.map((link) => {
             const isActive = pathname === link.href || (pathname === '/' && link.href === '/#about' && scrolled);
             return (
