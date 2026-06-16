@@ -45,7 +45,7 @@ export function getTrackImage(track: any): string {
 export function getAverageColor(imgUrl: string): Promise<string> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') {
-      return resolve('#E61C1C');
+      return resolve('#D97757');
     }
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -55,7 +55,7 @@ export function getAverageColor(imgUrl: string): Promise<string> {
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      if (!ctx) return resolve('#E61C1C');
+      if (!ctx) return resolve('#D97757');
       canvas.width = 16;
       canvas.height = 16;
       ctx.drawImage(img, 0, 0, 16, 16);
@@ -102,7 +102,7 @@ export function getAverageColor(imgUrl: string): Promise<string> {
         }
         
         if (count === 0) {
-          return resolve('#E61C1C');
+          return resolve('#D97757');
         }
         
         r = Math.floor(r / count);
@@ -120,11 +120,11 @@ export function getAverageColor(imgUrl: string): Promise<string> {
         
         resolve(`rgb(${r}, ${g}, ${b})`);
       } catch (e) {
-        resolve('#E61C1C');
+        resolve('#D97757');
       }
     };
     img.onerror = () => {
-      resolve('#E61C1C');
+      resolve('#D97757');
     };
   });
 }

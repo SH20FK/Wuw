@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Magnetic } from './Magnetic';
 import useLastFmStore from '@/store/useLastFmStore';
 import { useSfx } from '@/lib/useSfx';
+import { Volume2, VolumeX } from 'lucide-react';
 
 const LINKS = [
   { name: 'About', href: '/#about' },
@@ -67,10 +68,12 @@ export function NavBar() {
             <button
               onClick={handleSoundToggle}
               onMouseEnter={playHover}
-              className="font-mono text-[8px] sm:text-[10px] text-text-dim hover:text-accent transition-colors py-1 px-1.5 sm:px-2 uppercase cursor-pointer border border-[rgba(184,173,158,0.08)] rounded bg-surface/20 hover:bg-surface/50 flex items-center gap-1"
+              className="relative group font-mono text-[10px] uppercase tracking-wider text-text-dim hover:text-accent transition-colors flex items-center gap-1.5 py-1 px-2 cursor-pointer bg-transparent border-none outline-none"
               title={soundEnabled ? "Mute UI sounds" : "Unmute UI sounds"}
             >
-              <span>{soundEnabled ? '🔊' : '🔇'}</span>
+              <span className="flex items-center justify-center shrink-0">
+                {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              </span>
               <span className="hidden xs:inline">{soundEnabled ? 'sound' : 'mute'}</span>
             </button>
           </Magnetic>

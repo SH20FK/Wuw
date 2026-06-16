@@ -37,7 +37,7 @@ export function useLastFm() {
           getAverageColor(coverUrl).then((color) => {
             setAccentColor(color);
           }).catch(() => {
-            setAccentColor('#E61C1C'); // fallback to Kino Red
+            setAccentColor('#D97757'); // fallback to terracotta orange
           });
 
           // Adjust visual grain
@@ -49,13 +49,13 @@ export function useLastFm() {
             gsap.to(grainUniforms, { uIntensity: 0.045, uSpeed: 1.0, duration: 2, onUpdate: updateGrainStore });
           }
         } else {
-          // If paused, track is offline/idle -> Fallback to Kino Red
-          setAccentColor('#E61C1C'); 
+          // If paused, track is offline/idle -> Fallback to terracotta orange
+          setAccentColor('#D97757'); 
           gsap.to(grainUniforms, { uIntensity: 0.025, uSpeed: 0.3, duration: 3, onUpdate: updateGrainStore });
         }
       } catch (err) {
         // Safe fallback on network failure
-        setAccentColor('#E61C1C');
+        setAccentColor('#D97757');
       }
     }
 

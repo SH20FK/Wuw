@@ -3,6 +3,7 @@ import { SectionLabel } from '@/components/ui/SectionLabel';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
+import { Send, Github, Music, Gamepad2 } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -11,20 +12,44 @@ export default function ContactPage() {
   const handleSend = async () => {
     if (!formData.name || !formData.email || !formData.message) {
       setStatus('validation_error');
-      setTimeout(() => setStatus('idle'), 2000);
+      setTimeout(() => setStatus('idle'), 2050);
       return;
     }
+    
     setStatus('loading');
-    await new Promise(r => setTimeout(r, 1500));
-    setStatus('success');
-    setTimeout(() => { setStatus('idle'); setFormData({ name: '', email: '', message: '' }); }, 3000);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatus('success');
+        setTimeout(() => {
+          setStatus('idle');
+          setFormData({ name: '', email: '', message: '' });
+        }, 3000);
+      } else {
+        console.error('Contact submission error response status:', response.status);
+        setStatus('error');
+        setTimeout(() => setStatus('idle'), 4000);
+      }
+    } catch (e) {
+      console.error('Contact submission request failed:', e);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 4000);
+    }
   };
 
   const statusText = { 
     idle: 'Отправить →', 
     loading: 'Отправляю...', 
     success: '✓ Отправлено', 
-    error: 'Ошибка, попробуй снова',
+    error: 'Ошибка! Попробуйте позже',
     validation_error: 'Заполните все поля!'
   };
 
@@ -48,13 +73,13 @@ export default function ContactPage() {
         </div>
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { label: 'Telegram', handle: '@Door0S', icon: '↗', url: 'https://t.me/Door0S' },
-            { label: 'GitHub', handle: 'SH20FK', icon: '↗', url: 'https://github.com/SH20FK' },
-            { label: 'Last.fm', handle: 'SH20FK', icon: '🎵', url: 'https://www.last.fm/user/SH20FK' },
-            { label: 'Steam', handle: 'SH20FK', icon: '🎮', url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
+            { label: 'Telegram', handle: '@Door0S', icon: <Send className="w-4 h-4 text-accent" />, url: 'https://t.me/Door0S' },
+            { label: 'GitHub', handle: 'SH20FK', icon: <Github className="w-4 h-4 text-accent" />, url: 'https://github.com/SH20FK' },
+            { label: 'Last.fm', handle: 'SH20FK', icon: <Music className="w-4 h-4 text-accent" />, url: 'https://www.last.fm/user/SH20FK' },
+            { label: 'Steam', handle: 'SH20FK', icon: <Gamepad2 className="w-4 h-4 text-accent" />, url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
           ].map(c => (
             <a href={c.url} target="_blank" rel="noopener noreferrer" key={c.label} className="bg-surface border border-[rgba(184,173,158,0.08)] rounded-lg px-5 py-4 flex items-center gap-4 hover:border-[rgba(184,173,158,0.2)] hover:-translate-y-0.5 transition-all text-left group cursor-pointer block">
-              <div className="text-accent text-lg flex items-center justify-center group-hover:scale-110 transition-transform">{c.icon}</div>
+              <div className="flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">{c.icon}</div>
               <div className="flex flex-col">
                 <span className="font-mono text-xs text-text-muted">{c.label}</span>
                 <span className="font-mono text-sm text-text">{c.handle}</span>
