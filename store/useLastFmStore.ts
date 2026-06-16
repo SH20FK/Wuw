@@ -26,7 +26,7 @@ const useLastFmStore = create<LastFmState>((set) => ({
   setGrain: (intensity, speed) => set({ grainIntensity: intensity, grainSpeed: speed }),
   nowPlaying: null,
   setNowPlaying: (track) => set({ nowPlaying: track }),
-  accentColor: '#E61C1C', // Fallback red (from Kino - Legend)
+  accentColor: '#D97757', // Fallback terracotta orange
   setAccentColor: (color) => set({ accentColor: color }),
   soundEnabled: getInitialSoundEnabled(),
   toggleSound: () => set((state) => {

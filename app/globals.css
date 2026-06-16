@@ -5,13 +5,13 @@
 @property --color-accent {
   syntax: '<color>';
   inherits: true;
-  initial-value: #E61C1C;
+  initial-value: #D97757;
 }
 
 @property --color-accent-glow {
   syntax: '<color>';
   inherits: true;
-  initial-value: rgba(230, 28, 28, 0.08);
+  initial-value: rgba(217, 119, 87, 0.08);
 }
 
 @layer base {
@@ -19,9 +19,9 @@
     --color-bg: #0E0C0F;
     --color-surface: #181620;
     --color-surface-2: #1F1D2A;
-    --color-accent: #E61C1C;
+    --color-accent: #D97757;
     --color-accent-sub: #7A8A97;
-    --color-accent-glow: rgba(230, 28, 28, 0.08);
+    --color-accent-glow: rgba(217, 119, 87, 0.08);
     --color-text: #EAE5DC;
     --color-text-muted: #5A5664;
     --color-text-dim: #8A8590;
