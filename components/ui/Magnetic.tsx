@@ -1,10 +1,12 @@
 'use client';
 import { useRef, useState, MouseEvent } from 'react';
 import { motion } from 'framer-motion';
+import { useSfx } from '@/lib/useSfx';
 
 export function Magnetic({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const { playHover } = useSfx();
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!ref.current) return;
@@ -27,6 +29,7 @@ export function Magnetic({ children }: { children: React.ReactNode }) {
     <motion.div
       ref={ref}
       onMouseMove={handleMouseMove}
+      onMouseEnter={playHover}
       onMouseLeave={handleMouseLeave}
       animate={{ x: position.x, y: position.y }}
       transition={{ type: 'spring', stiffness: 140, damping: 12, mass: 0.15 }}

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const API_KEY = process.env.LASTFM_API_KEY;
 const USER = 'SH20FK';
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
@@ -242,6 +244,44 @@ async function getFallbackArtwork(artist: string, trackName: string): Promise<st
   return null;
 }
 
+async function fetchiTunesPreviewAndArtwork(artist: string, trackName: string): Promise<{ previewUrl: string | null; artworkUrl: string | null }> {
+  const cleanArtist = cleanString(artist);
+  const cleanTrack = cleanString(trackName);
+  const searchCountries = ['us', 'kz', 'ru'];
+  
+  for (const c of searchCountries) {
+    try {
+      const term = `${cleanArtist} - ${cleanTrack}`;
+      const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=3&country=${c}`;
+      const res = await fetch(url, { next: { revalidate: 86400 } });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.results && json.results.length > 0) {
+          const matched = json.results.find((item: any) => {
+            const art = (item.artistName || '').toLowerCase();
+            const trk = (item.trackName || '').toLowerCase();
+            return (art.includes(cleanArtist.toLowerCase()) || cleanArtist.toLowerCase().includes(art)) &&
+                   (trk.includes(cleanTrack.toLowerCase()) || cleanTrack.toLowerCase().includes(trk));
+          }) || json.results[0];
+          
+          if (matched) {
+            const artworkUrl = matched.artworkUrl100 
+              ? matched.artworkUrl100.replace('100x100bb.jpg', '500x500bb.jpg').replace('100x100bb', '500x500bb')
+              : null;
+            return {
+              previewUrl: matched.previewUrl || null,
+              artworkUrl: artworkUrl,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.error('iTunes API preview fetch error:', e);
+    }
+  }
+  return { previewUrl: null, artworkUrl: null };
+}
+
 export async function GET(req: NextRequest) {
   if (!API_KEY) return NextResponse.json({ error: 'Last.fm API key missing' }, { status: 500 });
   const { searchParams } = new URL(req.url);
@@ -259,18 +299,36 @@ export async function GET(req: NextRequest) {
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
 
-    // Augment covers if they are missing or placeholders
+    // Augment covers if they are missing or placeholders, and retrieve preview URLs
     if (data.recenttracks?.track) {
       const tracks = Array.isArray(data.recenttracks.track) ? data.recenttracks.track : [data.recenttracks.track];
-      await Promise.all(tracks.map(async (t: any) => {
+      await Promise.all(tracks.map(async (t: any, idx: number) => {
         let currentCover = '';
         if (t.image && Array.isArray(t.image)) {
           const maxImg = t.image[t.image.length - 1];
           if (maxImg) currentCover = maxImg['#text'] || '';
         }
+
+        const artistName = t.artist?.['#text'] || '';
+        const trackName = t.name || '';
+
+        // Safely retrieve audio previews for high-fidelity interactive playback context
+        if (idx < 2) {
+          const info = await fetchiTunesPreviewAndArtwork(artistName, trackName);
+          if (info.previewUrl) {
+            t.previewUrl = info.previewUrl;
+          }
+          if (isMissingOrPlaceholderCover(currentCover) && info.artworkUrl) {
+            currentCover = info.artworkUrl;
+            if (t.image && Array.isArray(t.image)) {
+              t.image = t.image.map((img: any) => ({ ...img, '#text': info.artworkUrl }));
+            } else {
+              t.image = [{ '#text': info.artworkUrl, size: 'extralarge' }];
+            }
+          }
+        }
+
         if (isMissingOrPlaceholderCover(currentCover)) {
-          const artistName = t.artist?.['#text'] || '';
-          const trackName = t.name || '';
           const newCover = await getFallbackArtwork(artistName, trackName);
           if (newCover) {
             if (t.image && Array.isArray(t.image)) {

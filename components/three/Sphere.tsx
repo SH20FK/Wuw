@@ -6,6 +6,7 @@ import useLastFmStore from '@/store/useLastFmStore';
 
 export function Sphere() {
   const pointsRef = useRef<THREE.Points>(null);
+  const outerPointsRef = useRef<THREE.Points>(null);
   const geomRef = useRef<THREE.BufferGeometry>(null);
   const mouse = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
   
@@ -27,8 +28,24 @@ export function Sphere() {
     return geo.getAttribute('position').clone();
   }, []);
 
+  // Generate outer loose acoustic cloud particles in a shell of 2.2 to 5.0 radius
+  const outerParticles = useMemo(() => {
+    const count = 350;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = 2.2 + Math.random() * 2.8;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return positions;
+  }, []);
+
   useFrame((state) => {
-    if (!pointsRef.current || !geomRef.current) return;
+    if (!pointsRef.current || !geomRef.current || !outerPointsRef.current) return;
 
     // Smoothly interpolate current mouse to target mouse with inertia
     const lerpSpeed = 0.04;
@@ -40,14 +57,22 @@ export function Sphere() {
     const autoY = state.clock.getElapsedTime() * autoSpeed;
     const autoX = state.clock.getElapsedTime() * (autoSpeed * 0.5);
     
+    // Core Sphere Rotation
     pointsRef.current.rotation.y = autoY + mouse.current.x * 0.7;
     pointsRef.current.rotation.x = autoX + mouse.current.y * 0.5;
+
+    // Outer Cloud: rotates slower but has far more mouse parallax tilt (giving depth)
+    outerPointsRef.current.rotation.y = (autoY * 0.3) + mouse.current.x * 1.6;
+    outerPointsRef.current.rotation.x = (autoX * 0.3) + mouse.current.y * 1.2;
 
     // Organic expansion breathing
     const breathRate = isPlaying ? 2.2 : 0.8;
     const breathAmp = isPlaying ? 0.08 : 0.03;
     const scale = 1.0 + Math.sin(state.clock.getElapsedTime() * breathRate) * breathAmp;
     pointsRef.current.scale.set(scale, scale, scale);
+    
+    const outerBreath = 1.0 + Math.sin(state.clock.getElapsedTime() * (breathRate * 0.7)) * (breathAmp * 1.3);
+    outerPointsRef.current.scale.set(outerBreath, outerBreath, outerBreath);
 
     // Dynamic wave distortion turbulence (sine noise wave) simulating a voice/audio print
     const positions = geomRef.current.getAttribute('position');
@@ -73,15 +98,35 @@ export function Sphere() {
   });
 
   return (
-    <points ref={pointsRef} renderOrder={1}>
-      <sphereGeometry ref={geomRef} args={[1.8, 36, 36]} />
-      <pointsMaterial 
-        color={accentColor} 
-        size={isPlaying ? 0.016 : 0.012} 
-        transparent 
-        opacity={isPlaying ? 0.8 : 0.55} 
-        sizeAttenuation 
-      />
-    </points>
+    <group>
+      {/* Main Core Sphere */}
+      <points ref={pointsRef} renderOrder={2}>
+        <sphereGeometry ref={geomRef} args={[1.8, 36, 36]} />
+        <pointsMaterial 
+          color={accentColor} 
+          size={isPlaying ? 0.016 : 0.012} 
+          transparent 
+          opacity={isPlaying ? 0.8 : 0.55} 
+          sizeAttenuation 
+        />
+      </points>
+
+      {/* Loose Outer Acoustic Cloud */}
+      <points ref={outerPointsRef} renderOrder={1}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[outerParticles, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          color={accentColor}
+          size={0.007}
+          transparent
+          opacity={isPlaying ? 0.35 : 0.22}
+          sizeAttenuation
+        />
+      </points>
+    </group>
   );
 }

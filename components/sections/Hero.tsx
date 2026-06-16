@@ -1,24 +1,58 @@
 'use client';
+import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { spring, stagger } from '@/lib/animations';
 import { Button } from '@/components/ui/Button';
 import { Magnetic } from '@/components/ui/Magnetic';
 import dynamic from 'next/dynamic';
+import useScrollStore from '@/store/useScrollStore';
 
 const HeroCanvas = dynamic(() => import('@/components/three/HeroCanvas'), { ssr: false });
 
 export function Hero({ isLoading }: { isLoading: boolean }) {
   const isRevealed = !isLoading;
+  const h1Ref = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    let currentSkew = 0;
+    let currentSpacing = 0;
+    let currentWeight = 300;
+
+    const updateKinetic = () => {
+      if (!active) return;
+      const targetVelocity = useScrollStore.getState().velocity;
+
+      // Smooth lerping transition
+      currentSkew += (targetVelocity * -0.05 - currentSkew) * 0.1;
+      currentSpacing += (Math.abs(targetVelocity) * 0.08 - currentSpacing) * 0.1;
+      currentWeight += ((300 + Math.abs(targetVelocity) * 1.5) - currentWeight) * 0.1;
+
+      if (h1Ref.current) {
+        h1Ref.current.style.transform = `skewX(${Math.max(-15, Math.min(15, currentSkew))}deg)`;
+        h1Ref.current.style.letterSpacing = `${Math.max(0, Math.min(35, currentSpacing))}px`;
+        h1Ref.current.style.fontWeight = `${Math.max(100, Math.min(700, Math.round(currentWeight)))}`;
+      }
+
+      requestAnimationFrame(updateKinetic);
+    };
+
+    updateKinetic();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <section className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center">
       <HeroCanvas />
       {isRevealed && (
         <motion.div variants={stagger.container} initial="hidden" animate="visible" className="relative z-10 flex flex-col items-center text-center mt-[-8vh] px-6 select-none">
-          {/* Huge typography contrast: massive name, interactive weight transition on hover */}
+          {/* Huge typography contrast: massive name, interactive velocity animation */}
           <motion.h1 
+            ref={h1Ref}
             variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { ...spring.slow, delay: 0.1 } } }} 
-            className="font-display text-[clamp(4.5rem,15vw,12rem)] font-light leading-none tracking-tighter text-text hover:font-medium active:font-medium transition-[font-weight,color] duration-500 ease-out cursor-default"
+            className="font-display text-[clamp(4.5rem,15vw,12rem)] leading-none tracking-tighter text-text cursor-default select-none inline-block origin-center transition-[color] duration-500 ease-out"
           >
             SH20FK
           </motion.h1>

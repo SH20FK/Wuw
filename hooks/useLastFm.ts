@@ -21,6 +21,11 @@ export function useLastFm() {
         if (!tracks || tracks.length === 0) return;
         const track = tracks[0];
         
+        // Forward user play statistics (total scrobble counts) to nowPlaying context
+        if (data?.recenttracks?.['@attr']) {
+          track.userStats = data.recenttracks['@attr'];
+        }
+        
         // Let's set the track
         setNowPlaying(track);
 
