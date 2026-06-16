@@ -347,7 +347,7 @@ function MusicDashboard() {
                     <Sparkles className="w-4 h-4 text-accent" />
                     Любимые артисты
                   </h3>
-                  <p className="font-mono text-[9px] text-text-muted uppercase tracking-wider">Максимальный резонанс за все время</p>
+                  <p className="font-mono text-[9px] text-text-muted uppercase tracking-wider">Те кто по настоящему западают в душу</p>
                 </div>
 
                 <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-0.5 scrollbar-none">
@@ -382,7 +382,7 @@ function MusicDashboard() {
                             <span className="font-body text-sm text-text font-medium group-hover:text-accent transition-colors truncate max-w-[170px]">
                               {artist.name}
                             </span>
-                            <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider mt-0.5">Лидер прослушиваний</span>
+                            <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider mt-0.5">#{i+1} место</span>
                           </div>
                         </div>
 
@@ -407,7 +407,7 @@ function MusicDashboard() {
                 <div className="flex flex-col mb-2">
                   <h3 className="font-display text-xl text-text mb-1 flex items-center gap-2">
                     <Activity className="w-4 h-4 text-accent-sub" />
-                    Рекордсмены стриминга
+                    Самые прослушиваемые
                   </h3>
                   <p className="font-mono text-[9px] text-text-muted uppercase tracking-wider">Максимум повторов за все время</p>
                 </div>
@@ -464,7 +464,7 @@ function MusicDashboard() {
           <div className="flex items-center justify-between border-b border-[rgba(184,173,158,0.06)] pb-3">
             <div className="flex flex-col">
               <span className="font-mono text-[10px] text-accent tracking-wider uppercase font-semibold">СЕТКА СКРОББЛОВ (16 недель)</span>
-              <span className="font-mono text-[9px] text-text-muted mt-0.5">Ритмы и плотность активности</span>
+              <span className="font-mono text-[9px] text-text-muted mt-0.5">Когда и сколько я обычно слушаю</span>
             </div>
             <div className="px-2.5 py-0.5 bg-[rgba(184,173,158,0.05)] border border-[rgba(184,173,158,0.08)] rounded-full font-mono text-[8.5px] text-accent scale-95 pr-3 pl-3">
               13.5k+ скр. всего
@@ -531,10 +531,6 @@ function MusicDashboard() {
               <span className="font-mono text-[11px] text-accent font-bold mt-0.5">46%</span>
             </div>
           </div>
-
-          <p className="font-body text-[10px] text-text-muted text-center leading-normal italic px-1">
-            Слушает преимущественно в вечернее время. Преобладают плотные гитарные партии инди-рока, синти-вейв и концептуальный русский хип-хоп.
-          </p>
         </div>
       </div>
     </section>

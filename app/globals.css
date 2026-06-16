@@ -40,6 +40,15 @@
     transition: --color-accent 1000ms cubic-bezier(0.25, 1, 0.5, 1), --color-accent-glow 1000ms cubic-bezier(0.25, 1, 0.5, 1);
   }
 
+  /* Hide scrollbars globally */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
   body {
     background-color: var(--color-bg);
     color: var(--color-text);

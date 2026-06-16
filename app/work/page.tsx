@@ -110,7 +110,7 @@ export default function WorkPage() {
       </div>
 
       <div className="flex items-center gap-2 font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] select-none mt-auto">
-        <span>sh20fk studio • built with integrity</span>
+        <span>sh20fk • built with integrity</span>
       </div>
     </main>
   );

@@ -58,7 +58,7 @@ export default function ContactPage() {
       <div className="w-full max-w-[600px] mx-auto">
         <SectionLabel>/ 05 КОНТАКТ</SectionLabel>
         <h2 className="font-display text-4xl text-text mt-4">Есть что обсудить?</h2>
-        <p className="font-body text-text-dim mt-3">Пишу код, делаю анимации. Если нужен фронтендер — давай.</p>
+        <p className="font-body text-text-dim mt-3">Нужен фронтендер для сайта или приложения? Пиши!</p>
         <div className="mt-12 flex flex-col gap-6">
           <input type="text" placeholder="Имя" value={formData.name} onChange={(e) => setFormData(d => ({ ...d, name: e.target.value }))} className="w-full bg-transparent border-0 border-b border-[rgba(184,173,158,0.2)] pb-3 text-text font-body focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted placeholder:font-mono placeholder:text-sm" />
           <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData(d => ({ ...d, email: e.target.value }))} className="w-full bg-transparent border-0 border-b border-[rgba(184,173,158,0.2)] pb-3 text-text font-body focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted placeholder:font-mono placeholder:text-sm" />

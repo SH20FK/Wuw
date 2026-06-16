@@ -33,7 +33,7 @@ export function About() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
         <div ref={leftColRef} className="md:sticky md:top-24 h-fit">
           <div className="border border-[rgba(184,173,158,0.1)] p-6 rounded-lg bg-surface">
-            <div className="font-mono text-xs text-text-muted tracking-wider mb-2">ДОСЬЕ</div>
+            <div className="font-mono text-xs text-text-muted tracking-wider mb-2">Обо мне</div>
             <h3 className="font-display text-xl text-text leading-tight">Alexander Salamatin</h3>
             <div className="font-mono text-sm text-accent mt-1">@SH20FK</div>
             <div className="w-full h-px bg-[rgba(184,173,158,0.1)] my-4" />
@@ -79,7 +79,7 @@ export function About() {
           </div>
         </div>
         <div ref={rightColRef} className="flex flex-col">
-          <p className="font-body text-base text-text-dim leading-relaxed">Привет, я Александр (SH20FK). Занимаюсь фронтендом и творческой разработкой интерфейсов. Люблю, когда всё двигается правильно, а интерфейсы ощущаются физически. Создаю кастомные веб-системы, лаунчеры и игровые моды, где производительность и плавность не конфликтуют с дизайном.</p>
+          <p className="font-body text-base text-text-dim leading-relaxed">Привет, я Александр (SH20FK). Занимаюсь фронтендом и творческой разработкой интерфейсов. Люблю, когда всё двигается плавненько и с анимашками. Создаю сайты, приложения и игровые моды, кароче все что мне не лень будет.</p>
           
           <div className="mt-12 flex flex-col gap-8">
             <div>
@@ -105,12 +105,12 @@ export function About() {
             </div>
 
             <div>
-              <h4 className="font-mono text-[10px] text-accent tracking-widest uppercase mb-4 font-semibold">02 / Инструменты и Стейт</h4>
+              <h4 className="font-mono text-[10px] text-accent tracking-widest uppercase mb-4 font-semibold">02 / Инструменты</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 col-span-1 sm:col-span-2">
-                  <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">Инфраструктура и Логика</span>
+                  <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">Инструменты разработки</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {['Zustand', 'Git / GitHub', 'ESLint / Prettier', 'GLSL / Шейдеры', 'Web Audio API'].map(item => <TechChip key={item}>{item}</TechChip>)}
+                    {['Git / GitHub', 'VS Code', 'npm / pnpm'].map(item => <TechChip key={item}>{item}</TechChip>)}
                   </div>
                 </div>
               </div>
