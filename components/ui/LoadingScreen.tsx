@@ -14,21 +14,33 @@ export function LoadingScreen({ isLoading, onComplete }: { isLoading: boolean; o
 
   // Skip mechanism
   const triggerSkip = () => {
-    if (hasSkipped) return;
-    setHasSkipped(true);
-    setProgress(100);
-    onComplete?.();
+    setHasSkipped((prev) => {
+      if (prev) return prev;
+      setProgress(100);
+      return true;
+    });
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        triggerSkip();
+        setHasSkipped((prev) => {
+          if (prev) return prev;
+          setProgress(100);
+          return true;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasSkipped, triggerSkip]);
+  }, []);
+
+  // Trigger completion state once progress reaches 100%
+  useEffect(() => {
+    if (progress >= 100) {
+      onComplete?.();
+    }
+  }, [progress, onComplete]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -41,17 +53,20 @@ export function LoadingScreen({ isLoading, onComplete }: { isLoading: boolean; o
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          onComplete?.();
           return 100;
         }
         const step = Math.floor(Math.random() * 8) + 6;
         const next = prev + step;
-        return next >= 100 ? 100 : next;
+        if (next >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return next;
       });
     }, 110);
 
     return () => clearInterval(interval);
-  }, [isLoading, onComplete]);
+  }, [isLoading]);
 
   // Push systemic log events based on loading percentage progress
   useEffect(() => {
