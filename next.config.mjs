@@ -6,7 +6,11 @@ const nextConfig = {
   output: 'standalone',
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**' }
+      { protocol: 'https', hostname: 'i.imgur.com' },
+      { protocol: 'https', hostname: 'imgur.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'lastfm.freetls.fastly.net' },
+      { protocol: 'https', hostname: 'lastfm-img2.akamaized.net' }
     ]
   }
 };
