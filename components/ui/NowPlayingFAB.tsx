@@ -80,7 +80,7 @@ export function NowPlayingFAB() {
 
       if (!analyserRef.current) {
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 32; // Optimized for 6 bands
+        analyser.fftSize = 64; // Frequency bin count = 32
         analyserRef.current = analyser;
       }
 
@@ -128,34 +128,46 @@ export function NowPlayingFAB() {
   // Real-time animation loop for live analyser or sinusoidal simulated visuals
   useEffect(() => {
     let active = true;
-    const frequencyData = new Uint8Array(6);
+    const frequencyData = new Uint8Array(32); // Holds the 32 bins of fftSize 64
+    const currentHeights = [12, 12, 12, 12, 12, 12]; // Keep state inside loop closure for lerp calculation
 
     const renderTick = () => {
       if (!active) return;
 
-      const hasLiveAnalyser = isPlayingPreview && analyserRef.current;
+      let hasLiveAnalyser = isPlayingPreview && !!analyserRef.current;
       
-      if (hasLiveAnalyser && analyserRef.current) {
-        analyserRef.current.getByteFrequencyData(frequencyData);
-        for (let i = 0; i < 6; i++) {
-          const bar = barsRef.current[i];
-          if (bar) {
-            const rawVal = frequencyData[i] || 0;
-            // Map byte data to responsive height percentage
-            const percent = Math.min(100, Math.max(12, (rawVal / 220) * 100));
-            bar.style.height = `${percent}%`;
-          }
+      try {
+        if (hasLiveAnalyser && analyserRef.current) {
+          analyserRef.current.getByteFrequencyData(frequencyData);
         }
-      } else {
-        // Multi-frequency phase-shifted sine wave simulation backup
-        const time = performance.now() * 0.003;
-        for (let i = 0; i < 6; i++) {
-          const bar = barsRef.current[i];
-          if (bar) {
+      } catch (e) {
+        console.warn("CORS or Web Audio exception in equalizer cycle. Falling back to emulation:", e);
+        analyserRef.current = null;
+        setIsPlayingPreview(false);
+        hasLiveAnalyser = false;
+      }
+
+      const time = performance.now() * 0.003;
+
+      for (let i = 0; i < 6; i++) {
+        const bar = barsRef.current[i];
+        if (bar) {
+          let targetPercent = 12;
+
+          if (hasLiveAnalyser) {
+            // Pick index across the full 32 bin spectrum spacing evenly (approx step = 5)
+            const index = i * 5;
+            const rawVal = frequencyData[index] || 0;
+            targetPercent = Math.min(100, Math.max(12, (rawVal / 220) * 100));
+          } else {
+            // Multi-frequency phase-shifted sine wave simulation backup
             const wave = Math.sin(time * (1 + i * 0.35) + i) * 35 + Math.cos(time * 0.6 - i) * 15 + 50;
-            const percent = isNowPlayingLive ? Math.max(12, Math.min(100, wave)) : 12; // Flat indicator when not streaming
-            bar.style.height = `${percent}%`;
+            targetPercent = isNowPlayingLive ? Math.max(12, Math.min(100, wave)) : 12; // Flat indicator when not streaming
           }
+
+          // Buttery smooth linear interpolation (lerp with factor 0.3)
+          currentHeights[i] += (targetPercent - currentHeights[i]) * 0.3;
+          bar.style.height = `${currentHeights[i]}%`;
         }
       }
 

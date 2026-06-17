@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
+import { createNoise3D } from 'simplex-noise';
 import useLastFmStore from '@/store/useLastFmStore';
 
 export function Sphere() {
@@ -12,6 +13,8 @@ export function Sphere() {
   
   const { accentColor, nowPlaying } = useLastFmStore();
   const isPlaying = nowPlaying?.['@attr']?.nowplaying === 'true';
+
+  const noise3D = useMemo(() => createNoise3D(), []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -74,23 +77,22 @@ export function Sphere() {
     const outerBreath = 1.0 + Math.sin(state.clock.getElapsedTime() * (breathRate * 0.7)) * (breathAmp * 1.3);
     outerPointsRef.current.scale.set(outerBreath, outerBreath, outerBreath);
 
-    // Dynamic wave distortion turbulence (sine noise wave) simulating a voice/audio print
+    // Dynamic wave distortion turbulence (simplex 3D noise) simulating high-fidelity physical acoustics
     const positions = geomRef.current.getAttribute('position');
     const count = positions.count;
-    const warpTime = state.clock.getElapsedTime() * (isPlaying ? 4.0 : 1.0);
-    const waveFreq = isPlaying ? 1.5 : 0.6;
-    const waveAmp = isPlaying ? 0.18 : 0.04;
+    const warpTime = state.clock.getElapsedTime() * (isPlaying ? 1.4 : 0.4);
+    const waveFreq = isPlaying ? 0.8 : 0.35;
+    const waveAmp = isPlaying ? 0.32 : 0.08;
 
     for (let i = 0; i < count; i++) {
       const rx = initialPositions.getX(i);
       const ry = initialPositions.getY(i);
       const rz = initialPositions.getZ(i);
 
-      // Mutate coordinates to generate high-fidelity physical acoustics
-      const offset = (rx + ry + rz) * waveFreq;
-      const dx = Math.sin(warpTime + offset) * waveAmp;
-      const dy = Math.cos(warpTime + offset) * waveAmp;
-      const dz = Math.sin(warpTime + offset * 1.5) * waveAmp;
+      // Separate 3D noise translation for x, y, z with varied seed offsets to avoid synchronization
+      const dx = noise3D(rx * waveFreq + warpTime, ry * waveFreq, rz * waveFreq) * waveAmp;
+      const dy = noise3D(rx * waveFreq, ry * waveFreq + warpTime + 100.0, rz * waveFreq) * waveAmp;
+      const dz = noise3D(rx * waveFreq, ry * waveFreq, rz * waveFreq + warpTime + 200.0) * waveAmp;
 
       positions.setXYZ(i, rx + dx, ry + dy, rz + dz);
     }

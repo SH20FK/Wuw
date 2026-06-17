@@ -1,5 +1,6 @@
 'use client';
 import { Canvas } from '@react-three/fiber';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { Sphere } from './Sphere';
 
 export default function HeroCanvas() {
@@ -10,9 +11,17 @@ export default function HeroCanvas() {
         gl={{ preserveDrawingBuffer: false, antialias: true, alpha: true }}
         dpr={[1, 1.5]}
         style={{ pointerEvents: 'none' }}
-        className="w-full h-full opacity-60"
+        className="w-full h-full"
       >
         <Sphere />
+        <EffectComposer multisampling={0}>
+          <Bloom
+            intensity={1.2}
+            luminanceThreshold={0.1}
+            luminanceSmoothing={0.9}
+            mipmapBlur
+          />
+        </EffectComposer>
       </Canvas>
     </div>
   );

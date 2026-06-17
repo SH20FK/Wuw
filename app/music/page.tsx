@@ -1,7 +1,7 @@
 'use client';
 import useLastFmStore from '@/store/useLastFmStore';
 import { extractDominantColor } from '@/lib/colorExtract';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 import Image from 'next/image';
@@ -48,6 +48,48 @@ function NowPlayingHero() {
 
   const isLive = nowPlaying?.['@attr']?.nowplaying === 'true';
   const coverImg = getTrackImage(nowPlaying);
+
+  const barsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const currentHeightsRef = useRef<number[]>(Array(14).fill(4));
+  const targetHeightsRef = useRef<number[]>(Array(14).fill(4));
+  const lastTargetTimeRef = useRef<number[]>(Array(14).fill(0));
+
+  useEffect(() => {
+    let active = true;
+    let animationFrameId: number;
+
+    const tick = (timestamp: number) => {
+      if (!active) return;
+
+      const isPlaying = !!(isLive || nowPlaying?.isPlaying);
+
+      for (let i = 0; i < 14; i++) {
+        const bar = barsRef.current[i];
+        if (bar) {
+          if (isPlaying) {
+            if (timestamp >= lastTargetTimeRef.current[i]) {
+              targetHeightsRef.current[i] = Math.random() * 18 + 6;
+              lastTargetTimeRef.current[i] = timestamp + (Math.random() * 150 + 100);
+            }
+            currentHeightsRef.current[i] += (targetHeightsRef.current[i] - currentHeightsRef.current[i]) * 0.16;
+          } else {
+            currentHeightsRef.current[i] += (4 - currentHeightsRef.current[i]) * 0.12;
+            lastTargetTimeRef.current[i] = 0;
+          }
+          bar.style.height = `${currentHeightsRef.current[i]}px`;
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(tick);
+    };
+
+    animationFrameId = requestAnimationFrame(tick);
+
+    return () => {
+      active = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [nowPlaying, isLive]);
 
   return (
     <section className="min-h-[75vh] flex items-center relative overflow-hidden pt-28 pb-12">
@@ -134,19 +176,17 @@ function NowPlayingHero() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Pulse Spectrum Visualizer when playing */}
-          {isLive && (
+          {/* Pulse Spectrum Visualizer */}
+          {nowPlaying && (
             <div className="flex items-end gap-1 mt-6 h-6">
               {[...Array(14)].map((_, i) => (
-                <motion.div
+                <div
                   key={i}
-                  className="w-[3px] bg-accent rounded-t"
-                  animate={{ height: ['4px', `${Math.random() * 24 + 4}px`, '4px'] }}
-                  transition={{
-                    duration: 0.6 + i * 0.08,
-                    repeat: Infinity,
-                    ease: 'easeInOut'
+                  ref={(el) => {
+                    barsRef.current[i] = el;
                   }}
+                  className="w-[3px] bg-accent rounded-t"
+                  style={{ height: '4px' }}
                 />
               ))}
             </div>
