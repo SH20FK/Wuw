@@ -63,9 +63,9 @@ export default async function Image() {
   const track = await getNowPlaying();
   const hasNowPlaying = track && track.isNowPlaying;
   
-  const accentColor = hasNowPlaying 
+  const accentColor = track 
     ? getAccentColor(track.artist, track.name) 
-    : '#D97757'; // Falling back to default accent
+    : '#B8AD9E'; // Falling back to premium warm taupe
 
   return new ImageResponse(
     (
@@ -126,12 +126,12 @@ export default async function Image() {
               color: '#EAE5DC',
             }}
           >
-            {hasNowPlaying ? '🔴 LIVE NOW PLAYING' : 'PORTFOLIO ARCHIVE'}
+            {track ? (hasNowPlaying ? '🔴 LIVE NOW PLAYING' : '🕒 RECENTLY PLAYED') : 'PORTFOLIO ARCHIVE'}
           </div>
         </div>
 
         {/* Main Content Area */}
-        {hasNowPlaying ? (
+        {track ? (
           <div
             style={{
               display: 'flex',
@@ -148,7 +148,7 @@ export default async function Image() {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                maxWidth: '650px',
+                maxWidth: '620px',
               }}
             >
               <div
@@ -163,12 +163,17 @@ export default async function Image() {
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    backgroundColor: '#10B981',
+                    backgroundColor: hasNowPlaying ? '#10B981' : '#7A8A97',
                     marginRight: '8px',
                   }}
                 />
-                <span style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '1px', color: '#1B9F72' }}>
-                  СЛУШАЮ СЕЙЧАС (LAST.FM)
+                <span style={{ 
+                  fontSize: '12px', 
+                  fontWeight: 600, 
+                  letterSpacing: '1px', 
+                  color: hasNowPlaying ? '#1B9F72' : '#7A8A97' 
+                }}>
+                  {hasNowPlaying ? 'СЛУШАЮ СЕЙЧАС (LAST.FM)' : 'НЕДАВНО СЛУШАЛ (LAST.FM)'}
                 </span>
               </div>
               <div
@@ -203,42 +208,103 @@ export default async function Image() {
               </div>
             </div>
 
-            {/* Aesthetic CSS spinning Vinyl Record (Right) */}
+            {/* Overlapping Vinyl + Cover Art Sleeve (Right) */}
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '280px',
-                height: '280px',
-                borderRadius: '50%',
-                border: '4px solid #181620',
-                background: 'radial-gradient(circle, #100e12 10%, #1c1822 40%, #100e12 90%)',
                 position: 'relative',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
+                width: '360px',
+                height: '240px',
+                alignItems: 'center',
               }}
             >
-              {/* Core vinyl label with track color */}
+              {/* Vinyl Record Model */}
               <div
                 style={{
-                  width: '95px',
-                  height: '95px',
-                  borderRadius: '50%',
-                  backgroundColor: '#0E0C0F',
-                  border: `3px solid ${accentColor}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  width: '220px',
+                  height: '220px',
+                  borderRadius: '50%',
+                  border: '4px solid #181620',
+                  background: 'radial-gradient(circle, #100e12 10%, #1c1822 40%, #100e12 90%)',
+                  position: 'absolute',
+                  right: '0px',
+                  top: '10px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
                 }}
               >
+                {/* Core vinyl hole label with track accent color */}
                 <div
                   style={{
-                    width: '20px',
-                    height: '20px',
+                    width: '76px',
+                    height: '76px',
                     borderRadius: '50%',
-                    backgroundColor: accentColor,
+                    backgroundColor: '#0E0C0F',
+                    border: `3px solid ${accentColor}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      backgroundColor: accentColor,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Album Cover Art Jacket (stuck in front) */}
+              <div
+                style={{
+                  display: 'flex',
+                  width: '240px',
+                  height: '240px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(184, 173, 158, 0.15)',
+                  backgroundColor: '#181620',
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)',
+                  overflow: 'hidden',
+                }}
+              >
+                {track.image ? (
+                  <img
+                    src={track.image}
+                    alt={track.album || 'Album Art'}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      width: '100%',
+                      height: '100%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: `linear-gradient(135deg, #181620 0%, ${accentColor}33 100%)`,
+                      color: '#EAE5DC',
+                      padding: '24px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#B8AD9E' }}>
+                      {track.album || 'ALBUM'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
