@@ -15,7 +15,7 @@ const PROJECTS: Project[] = [
     type: 'Mobile / Flutter',
     title: 'NiosMess',
     description: '',
-    image: 'https://i.imgur.com/4oQdpNH.png',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
     url: 'https://github.com/SH20FK',
     tags: ['Flutter', 'Dart', 'WebSockets']
   },
@@ -25,7 +25,7 @@ const PROJECTS: Project[] = [
     type: 'Minecraft Mod / Fabric',
     title: 'Project3',
     description: '',
-    image: 'https://i.imgur.com/loGyHFn.png',
+    image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80',
     url: 'https://github.com/SH20FK',
     tags: ['Java', 'Fabric API', 'MinecraftGL']
   }
