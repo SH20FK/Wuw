@@ -16,4 +16,3 @@ export function WarpImage({ src, alt }: { src: string, alt: string }) {
     </div>
   );
 }
-

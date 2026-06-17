@@ -60,19 +60,7 @@ export function BackgroundWrapper() {
 
   return (
     <>
-      {/* 1. Fine-lined Tech Grid (Subtle) */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-[1]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(184, 173, 158, 0.008) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(184, 173, 158, 0.008) 1px, transparent 1px)
-          `,
-          backgroundSize: '56px 56px',
-        }}
-      />
-
-      {/* 2. Soft, ultra-low opacity spotlight following mouse coordinates behind page content */}
+      {/* 1. Soft, ultra-low opacity spotlight following mouse coordinates behind page content */}
       <div 
         className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -81,7 +69,7 @@ export function BackgroundWrapper() {
         }}
       />
 
-      {/* 3. Dynamic GLSL film grain overlay canvas */}
+      {/* 2. Dynamic GLSL film grain overlay canvas */}
       {hasWebGL && <CanvasObj />}
     </>
   );
