@@ -187,6 +187,9 @@ function MusicDashboard() {
   const [activeTab, setActiveTab] = useState<'artists' | 'tracks'>('artists');
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
 
+  const nowPlaying = useLastFmStore(state => state.nowPlaying);
+  const nowPlayingKey = nowPlaying ? `${nowPlaying.name}-${nowPlaying.artist?.['#text']}` : '';
+
   // Generate a beautiful, organic-looking heatmap data
   const heatmapData = useMemo(() => {
     const days = ['Пн', 'Ср', 'Пт', 'Вс'];
@@ -214,14 +217,16 @@ function MusicDashboard() {
     return { days, grid };
   }, []);
 
+  // Fetch recent scrobbles whenever the now-playing track changes
   useEffect(() => {
-    // 1. Fetch recent scrobbles
     fetch('/api/lastfm?method=user.getrecenttracks&limit=8')
       .then(r => r.json())
       .then(d => { if (d?.recenttracks?.track) setRecentTracks(d.recenttracks.track); })
       .catch(() => {});
+  }, [nowPlayingKey]);
 
-    // 2. Fetch top charts
+  // Fetch top charts once on mount
+  useEffect(() => {
     Promise.all([
       fetch('/api/lastfm?method=user.gettopartists&limit=6').then(r => r.json()),
       fetch('/api/lastfm?method=user.gettoptracks&limit=5').then(r => r.json())
