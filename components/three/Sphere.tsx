@@ -139,12 +139,15 @@ export function Sphere() {
         void main() {
           vPosition = position;
           
-          // Pure GPU-driven Noise displacements running instantly in parallel
-          float dx = snoise(position * uWaveFreq + vec3(uTime, 0.0, 0.0)) * uWaveAmp;
-          float dy = snoise(position * uWaveFreq + vec3(0.0, uTime + 100.0, 0.0)) * uWaveAmp;
-          float dz = snoise(position * uWaveFreq + vec3(0.0, 0.0, uTime + 200.0)) * uWaveAmp;
+          vec3 normalDir = normalize(position);
           
-          vec3 displaced = position + vec3(dx, dy, dz);
+          // Multi-frequency noise along the normal vector creates hyper-fluid organic waves
+          vec3 noiseCoords = normalDir * uWaveFreq;
+          float n1 = snoise(noiseCoords + vec3(0.0, 0.0, uTime * 0.6));
+          float n2 = snoise(noiseCoords * 2.5 - vec3(uTime * 0.3, uTime * 0.2, 0.0)) * 0.45;
+          float displacement = (n1 + n2) * uWaveAmp;
+          
+          vec3 displaced = position + normalDir * displacement;
           displaced *= uBreath;
           
           vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
