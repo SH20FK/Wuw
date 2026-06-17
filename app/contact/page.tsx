@@ -128,6 +128,7 @@ export default function ContactPage() {
           {[
             { label: 'Telegram', handle: '@Door0S', icon: <Send className="w-4 h-4 text-accent" />, url: 'https://t.me/Door0S' },
             { label: 'GitHub', handle: 'SH20FK', icon: <Github className="w-4 h-4 text-accent" />, url: 'https://github.com/SH20FK' },
+            { label: 'Last.fm', handle: 'SH20FK', icon: <Music className="w-4 h-4 text-accent" />, url: 'https://www.last.fm/user/SH20FK' },
             { label: 'Steam', handle: 'SH20FK', icon: <Gamepad2 className="w-4 h-4 text-accent" />, url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
           ].map(c => (
             <a 
