@@ -524,36 +524,43 @@ function MusicDashboard() {
 
             {/* Matrix grid container */}
             <div className="flex-1 flex flex-col justify-between h-32 gap-1.5 py-1">
-              {heatmapData.grid.map((row, rIdx) => (
-                <div key={rIdx} className="flex justify-between gap-1 h-3 w-full">
-                  {row.map((val, wIdx) => {
-                    const opacity = val === 0 ? 0.05 : val < 3 ? 0.28 : val < 6 ? 0.58 : val < 9 ? 0.84 : 1.0;
-                    const glowClass = val >= 7 ? 'shadow-[0_0_8px_rgba(184,173,158,0.35)]' : '';
+              {heatmapData.grid.map((row, rIdx) => {
+                const dayNames = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+                const dayName = dayNames[rIdx] || 'День';
 
-                    return (
-                      <motion.div
-                        key={wIdx}
-                        className={`flex-1 rounded-[3px] bg-accent cursor-crosshair group/tile relative ${glowClass}`}
-                        style={{ opacity }}
-                        whileHover={{ scale: 1.45, opacity: 1, zIndex: 12 }}
-                        transition={{ type: 'spring', stiffness: 450, damping: 14 }}
-                      >
-                        {/* Custom Micro Tooltip on hover */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#181620] border border-[rgba(184,173,158,0.18)] text-[8px] text-text font-mono tracking-wide px-2 py-0.8 rounded shadow-2xl whitespace-nowrap opacity-0 pointer-events-none group-hover/tile:opacity-100 transition-opacity duration-200 z-50">
-                          {val > 0 ? `${val} скробблов` : '0 скробблов'}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ))}
+                return (
+                  <div key={rIdx} className="flex justify-between gap-1 h-3 w-full">
+                    {row.map((val, wIdx) => {
+                      const opacity = val === 0 ? 0.05 : val < 3 ? 0.28 : val < 6 ? 0.58 : val < 9 ? 0.84 : 1.0;
+                      const glowClass = val >= 7 ? 'shadow-[0_0_8px_rgba(184,173,158,0.35)]' : '';
+                      const weekLabel = wIdx === 15 ? 'На этой неделе' : `${15 - wIdx} нед. назад`;
+
+                      return (
+                        <motion.div
+                          key={wIdx}
+                          className={`flex-1 rounded-[3px] bg-accent cursor-crosshair group/tile relative ${glowClass}`}
+                          style={{ opacity }}
+                          whileHover={{ scale: 1.45, opacity: 1, zIndex: 12 }}
+                          transition={{ type: 'spring', stiffness: 450, damping: 14 }}
+                        >
+                          {/* Custom Micro Tooltip on hover */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#181620]/95 backdrop-blur-md border border-[rgba(184,173,158,0.18)] text-[8px] text-text font-mono tracking-wide px-2 py-1 rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none group-hover/tile:opacity-100 transition-all duration-200 scale-90 group-hover/tile:scale-100 z-50">
+                            <span className="text-accent font-semibold">{dayName}</span> · {weekLabel}
+                            <div className="text-[7.5px] text-text-muted mt-0.5">{val > 0 ? `${val} треков прослушано` : 'Музыки не было'}</div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Time-of-Day Listening Density Module */}
           <div className="grid grid-cols-4 gap-2.5 border-t border-[rgba(184,173,158,0.06)] pt-5">
             <div className="flex flex-col items-center justify-center p-2 bg-bg/30 rounded-xl border border-[rgba(184,173,158,0.03)] group hover:border-[rgba(184,173,158,0.08)] transition-colors">
-              <Moon className="w-3.5 h-3.5 text-text-muted mb-1.5 group-hover:text-[#7A8A97] transition-colors" />
+              <Moon className="w-3.5 h-3.5 text-text-muted mb-1.5 group-hover:text-accent-sub transition-colors" />
               <span className="font-mono text-[8px] text-text-muted uppercase tracking-wider">Ночь</span>
               <span className="font-mono text-[11px] text-accent-sub font-semibold mt-0.5">8%</span>
             </div>

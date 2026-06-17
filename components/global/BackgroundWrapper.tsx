@@ -19,11 +19,71 @@ function isWebGLAvailable() {
 
 export function BackgroundWrapper() {
   const [hasWebGL, setHasWebGL] = useState(true);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [smoothPos, setSmoothPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     setHasWebGL(isWebGLAvailable());
+    
+    // Set initial position to center of screen before mouse moves
+    setMousePos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    setSmoothPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   }, []);
 
-  if (!hasWebGL) return null;
-  return <CanvasObj />;
+  // Listen to mouse moving across window
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Smooth out coordinate tracking with viscous spring effect
+  useEffect(() => {
+    let active = true;
+    const tick = () => {
+      if (!active) return;
+      setSmoothPos(prev => {
+        const dx = mousePos.x - prev.x;
+        const dy = mousePos.y - prev.y;
+        return {
+          x: prev.x + dx * 0.025, // slow viscous response
+          y: prev.y + dy * 0.025
+        };
+      });
+      requestAnimationFrame(tick);
+    };
+    tick();
+    return () => { active = false; };
+  }, [mousePos]);
+
+  return (
+    <>
+      {/* 1. Fine-lined Tech Grid (Subtle) */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-[1]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(184, 173, 158, 0.008) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(184, 173, 158, 0.008) 1px, transparent 1px)
+          `,
+          backgroundSize: '56px 56px',
+        }}
+      />
+
+      {/* 2. Soft, ultra-low opacity spotlight following mouse coordinates behind page content */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background: `radial-gradient(750px circle at ${smoothPos.x}px ${smoothPos.y}px, var(--color-accent-glow), transparent 75%)`,
+          opacity: 0.28,
+        }}
+      />
+
+      {/* 3. Dynamic GLSL film grain overlay canvas */}
+      {hasWebGL && <CanvasObj />}
+    </>
+  );
 }
+

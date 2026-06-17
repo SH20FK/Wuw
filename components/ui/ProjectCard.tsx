@@ -50,21 +50,21 @@ export function ProjectCard({ project }: { project: Project }) {
   }, []);
 
   return (
-    <div ref={cardRef} className="project-card w-full md:w-[420px] md:shrink-0 md:mx-4 cursor-pointer group" style={{ transformStyle: 'preserve-3d' }}>
-      <div ref={tiltContainerRef} className="w-full h-full bg-surface border border-[rgba(184,173,158,0.07)] rounded-lg overflow-hidden transition-colors duration-300 hover:border-[rgba(184,173,158,0.18)] flex flex-col" style={{ transformStyle: 'preserve-3d' }}>
+    <div ref={cardRef} className="project-card w-[82vw] sm:w-[350px] md:w-[420px] shrink-0 mx-2 md:mx-4 cursor-pointer group" style={{ transformStyle: 'preserve-3d' }}>
+      <div ref={tiltContainerRef} className="w-full h-full bg-surface border border-[rgba(184,173,158,0.07)] rounded-xl overflow-hidden transition-colors duration-300 hover:border-[rgba(184,173,158,0.18)] flex flex-col" style={{ transformStyle: 'preserve-3d' }}>
         <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_center,rgba(184,173,158,0.04),transparent)]" />
-        <div className="w-full aspect-[16/9] bg-surface-2 rounded-t-lg overflow-hidden relative">
+        <div className="w-full aspect-[16/10] bg-surface-2 rounded-t-xl overflow-hidden relative">
           <WarpImage src={project.image} alt={project.title} />
         </div>
         <div className="p-5 flex flex-col flex-1">
-          <div className="font-mono text-xs text-text-muted tracking-wider mb-2">{project.year} · {project.type}</div>
-          <h3 className="font-display text-xl text-text leading-tight mb-2">{project.title}</h3>
-          <p className="font-body text-sm text-text-dim line-clamp-2 mb-4">{project.description}</p>
-          <div className="mt-auto flex items-center justify-between">
-            <div className="flex gap-2 flex-wrap">
-              {project.tags.slice(0,2).map(t => <TechChip key={t}>{t}</TechChip>)}
+          <div className="font-mono text-[10px] text-text-muted tracking-wider mb-1.5 uppercase">{project.year} · {project.type}</div>
+          <h3 className="font-display text-lg sm:text-xl text-text leading-tight mb-4">{project.title}</h3>
+          
+          <div className="mt-auto flex items-center justify-between pt-2 border-t border-[rgba(184,173,158,0.04)]">
+            <div className="flex gap-1.5 flex-wrap">
+              {project.tags.slice(0, 3).map(t => <TechChip key={t}>{t}</TechChip>)}
             </div>
-            <Link href={project.url} className="font-mono text-xs text-accent hover:underline">Открыть ↗</Link>
+            <Link href={project.url} className="font-mono text-[11px] text-accent hover:underline">Открыть ↗</Link>
           </div>
         </div>
       </div>
