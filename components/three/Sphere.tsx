@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { createNoise3D } from 'simplex-noise';
 import useLastFmStore from '@/store/useLastFmStore';
 
+const GEOMETRY_ARGS = [1.8, 36, 36] as const;
+
 export function Sphere() {
   const pointsRef = useRef<THREE.Points>(null);
   const outerPointsRef = useRef<THREE.Points>(null);
@@ -15,6 +17,17 @@ export function Sphere() {
   const isPlaying = nowPlaying?.['@attr']?.nowplaying === 'true';
 
   const noise3D = useMemo(() => createNoise3D(), []);
+
+  // Continuous animation phase accumulators to prevent phase-jump glitches
+  const warpTimeRef = useRef(0);
+  const breathPhaseRef = useRef(0);
+
+  // Parameter smooth transitions
+  const currentSpeedRef = useRef(0.4);
+  const currentWaveAmpRef = useRef(0.08);
+  const currentWaveFreqRef = useRef(0.35);
+  const currentBreathAmpRef = useRef(0.03);
+  const currentBreathRateRef = useRef(0.8);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -47,15 +60,37 @@ export function Sphere() {
     return positions;
   }, []);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!pointsRef.current || !geomRef.current || !outerPointsRef.current) return;
+
+    // Throttle high deltas (e.g. background tab suspension) to prevent massive delta leaps
+    const dt = Math.min(delta, 0.1);
 
     // Smoothly interpolate current mouse to target mouse with inertia
     const lerpSpeed = 0.04;
     mouse.current.x += (mouse.current.targetX - mouse.current.x) * lerpSpeed;
     mouse.current.y += (mouse.current.targetY - mouse.current.y) * lerpSpeed;
 
-    // Adjust rate of particle self-rotation based on track playing state
+    // Define target parameters depending on play status
+    const targetSpeed = isPlaying ? 1.4 : 0.4;
+    const targetWaveAmp = isPlaying ? 0.32 : 0.08;
+    const targetWaveFreq = isPlaying ? 0.8 : 0.4;
+    const targetBreathAmp = isPlaying ? 0.08 : 0.03;
+    const targetBreathRate = isPlaying ? 2.2 : 0.8;
+
+    // Inertial smoothing for parameters over time
+    const paramLerp = 0.06;
+    currentSpeedRef.current += (targetSpeed - currentSpeedRef.current) * paramLerp;
+    currentWaveAmpRef.current += (targetWaveAmp - currentWaveAmpRef.current) * paramLerp;
+    currentWaveFreqRef.current += (targetWaveFreq - currentWaveFreqRef.current) * paramLerp;
+    currentBreathAmpRef.current += (targetBreathAmp - currentBreathAmpRef.current) * paramLerp;
+    currentBreathRateRef.current += (targetBreathRate - currentBreathRateRef.current) * paramLerp;
+
+    // Accumulate timeline positions using the smoothed speeds
+    warpTimeRef.current += dt * currentSpeedRef.current;
+    breathPhaseRef.current += dt * currentBreathRateRef.current;
+
+    // Adjust rate of particle self-rotation based on smoothed speed
     const autoSpeed = isPlaying ? 0.35 : 0.08;
     const autoY = state.clock.getElapsedTime() * autoSpeed;
     const autoX = state.clock.getElapsedTime() * (autoSpeed * 0.5);
@@ -68,21 +103,19 @@ export function Sphere() {
     outerPointsRef.current.rotation.y = (autoY * 0.3) + mouse.current.x * 1.6;
     outerPointsRef.current.rotation.x = (autoX * 0.3) + mouse.current.y * 1.2;
 
-    // Organic expansion breathing
-    const breathRate = isPlaying ? 2.2 : 0.8;
-    const breathAmp = isPlaying ? 0.08 : 0.03;
-    const scale = 1.0 + Math.sin(state.clock.getElapsedTime() * breathRate) * breathAmp;
+    // Organic expansion breathing with accumulated continuous phase (completely eliminates visual pops)
+    const scale = 1.0 + Math.sin(breathPhaseRef.current) * currentBreathAmpRef.current;
     pointsRef.current.scale.set(scale, scale, scale);
     
-    const outerBreath = 1.0 + Math.sin(state.clock.getElapsedTime() * (breathRate * 0.7)) * (breathAmp * 1.3);
+    const outerBreath = 1.0 + Math.sin(breathPhaseRef.current * 0.7) * (currentBreathAmpRef.current * 1.3);
     outerPointsRef.current.scale.set(outerBreath, outerBreath, outerBreath);
 
-    // Dynamic wave distortion turbulence (simplex 3D noise) simulating high-fidelity physical acoustics
+    // Dynamic wave distortion turbulence (simplex 3D noise)
     const positions = geomRef.current.getAttribute('position');
     const count = positions.count;
-    const warpTime = state.clock.getElapsedTime() * (isPlaying ? 1.4 : 0.4);
-    const waveFreq = isPlaying ? 0.8 : 0.35;
-    const waveAmp = isPlaying ? 0.32 : 0.08;
+    const waveFreq = currentWaveFreqRef.current;
+    const waveAmp = currentWaveAmpRef.current;
+    const warpTime = warpTimeRef.current;
 
     for (let i = 0; i < count; i++) {
       const rx = initialPositions.getX(i);
@@ -103,7 +136,7 @@ export function Sphere() {
     <group>
       {/* Main Core Sphere */}
       <points ref={pointsRef} renderOrder={2}>
-        <sphereGeometry ref={geomRef} args={[1.8, 36, 36]} />
+        <sphereGeometry ref={geomRef} args={GEOMETRY_ARGS} />
         <pointsMaterial 
           color={accentColor} 
           size={isPlaying ? 0.016 : 0.012} 
