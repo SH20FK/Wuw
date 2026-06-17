@@ -5,9 +5,15 @@ import { Sphere } from './Sphere';
 
 export default function HeroCanvas() {
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0">
+    <div 
+      className="absolute inset-0 w-full h-full pointer-events-none select-none z-0"
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+      }}
+    >
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 45 }}
+        camera={{ position: [0, 0, 6.5], fov: 45 }}
         gl={{ preserveDrawingBuffer: false, antialias: true, alpha: true }}
         dpr={[1, 1.5]}
         style={{ pointerEvents: 'none' }}

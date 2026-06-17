@@ -30,9 +30,9 @@ export function ClientBoot() {
     }
     
     root.style.setProperty('--color-accent-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-    const sr = Math.max(0, Math.floor(r * 0.7));
-    const sg = Math.max(0, Math.floor(g * 0.73));
-    const sb = Math.max(0, Math.floor(b * 0.8));
+    const sr = Math.max(0, Math.floor(r * 0.75));
+    const sg = Math.max(0, Math.floor(g * 0.65));
+    const sb = Math.max(0, Math.floor(b * 0.55));
     root.style.setProperty('--color-accent-sub', `rgb(${sr}, ${sg}, ${sb})`);
 
   }, [accentColor]);

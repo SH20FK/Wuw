@@ -34,12 +34,12 @@ export function Sphere() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Generate outer loose acoustic cloud particles in a shell of 2.2 to 5.0 radius
+  // Generate outer loose acoustic cloud particles in a shell of 1.8 to 3.2 radius so they stay within camera frustum bounds
   const outerParticles = useMemo(() => {
     const count = 400; // slightly boosted for cinematic depth
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const r = 2.2 + Math.random() * 2.8;
+      const r = 1.8 + Math.random() * 1.4;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       
