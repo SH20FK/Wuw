@@ -36,8 +36,27 @@ export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'validation_error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [siteKey, setSiteKey] = useState<string | null>(null);
   const turnstileRef = useRef<any>(null);
   const { playHover, playClick, playType } = useSfx();
+
+  useState(() => {
+    // Fetch actual Turnstile site key dynamically from API to avoid build-time static string baking
+    if (typeof window !== 'undefined') {
+      fetch('/api/turnstile-config')
+        .then(res => res.json())
+        .then(data => {
+          if (data.siteKey) {
+            setSiteKey(data.siteKey);
+          } else {
+            setSiteKey('1x00000000000000000000AA');
+          }
+        })
+        .catch(() => {
+          setSiteKey('1x00000000000000000000AA');
+        });
+    }
+  });
 
   const handleInputChange = (field: 'name' | 'email' | 'message' | 'website', val: string) => {
     setFormData(prev => ({ ...prev, [field]: val }));
@@ -234,17 +253,19 @@ export default function ContactPage() {
             />
           </div>
 
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-            onSuccess={setTurnstileToken}
-            onExpire={() => setTurnstileToken(null)}
-            onError={() => setTurnstileToken(null)}
-            options={{
-              theme: 'dark',
-              size: 'invisible'
-            }}
-          />
+          {siteKey && (
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={siteKey}
+              onSuccess={setTurnstileToken}
+              onExpire={() => setTurnstileToken(null)}
+              onError={() => setTurnstileToken(null)}
+              options={{
+                theme: 'dark',
+                size: 'invisible'
+              }}
+            />
+          )}
 
           <button 
             onClick={handleSend} 
