@@ -37,6 +37,7 @@ export default function WorkPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { playHover, playClick } = useSfx();
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isLinkHovered, setIsLinkHovered] = useState(false);
 
   // Mouse move kinetic text skew effect for the large banner CTA
   useEffect(() => {
@@ -174,10 +175,24 @@ export default function WorkPage() {
             <Magnetic>
               <Link 
                 href="/contact"
-                onMouseEnter={playHover}
+                onMouseEnter={() => {
+                  playHover();
+                  setIsLinkHovered(true);
+                }}
+                onMouseLeave={() => setIsLinkHovered(false)}
                 onClick={playClick}
-                className="inline-block group focus:outline-none select-none relative"
+                className="inline-block group focus:outline-none select-none relative px-10 py-8"
               >
+                {/* Asymmetrical geometric backdrop glow morphing on Link hover */}
+                <div 
+                  className="absolute inset-0 bg-accent/[0.045] pointer-events-none -z-10 mix-blend-screen transition-all duration-[600ms]"
+                  style={{
+                    filter: 'blur(16px)',
+                    clipPath: isLinkHovered ? 'polygon(4% 0%, 100% 6%, 96% 100%, 0% 92%)' : 'polygon(0% 8%, 92% 0%, 100% 88%, 6% 100%)',
+                    transition: 'clip-path 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
+                  }}
+                />
+
                 <div className="flex items-center gap-2.5 font-mono text-[10px] sm:text-xs text-text-muted mb-4 uppercase tracking-widest select-none">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
