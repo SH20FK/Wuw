@@ -24,7 +24,8 @@ export function NavBar() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll);
+    onScroll(); // Run immediately on mount to establish the correct state
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
@@ -40,7 +41,7 @@ export function NavBar() {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${scrolled ? 'backdrop-blur-[20px] bg-[rgba(14,12,15,0.7)] border-b border-[rgba(184,173,158,0.08)]' : ''}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-500 ease-out ${scrolled ? 'backdrop-blur-xl bg-[rgba(14,12,15,0.73)] border-[rgba(184,173,158,0.08)]' : 'backdrop-blur-none bg-transparent border-transparent'}`}>
       <div className="max-w-[1200px] mx-auto py-4 px-4 sm:px-8 flex items-center justify-between">
         <Magnetic>
           <Link href="/" className="font-mono text-accent inline-block p-1">[SH20FK]</Link>
