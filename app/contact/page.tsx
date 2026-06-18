@@ -6,17 +6,45 @@ import { spring } from '@/lib/animations';
 import { Send, Github, Music, Gamepad2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useSfx } from '@/lib/useSfx';
 
+async function solveChallenge(challenge: { timestamp: number; randomValue: string; signature: string; difficulty: number }) {
+  const { timestamp, randomValue, signature, difficulty } = challenge;
+  const salt = `${timestamp}-${randomValue}-${signature}`;
+  const prefix = '0'.repeat(difficulty);
+  let nonce = 0;
+
+  const encoder = new TextEncoder();
+  while (true) {
+    const data = encoder.encode(salt + nonce);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (hashHex.startsWith(prefix)) {
+      return nonce;
+    }
+    nonce++;
+    if (nonce % 500 === 0) {
+      // Yield execution to the browser to prevent freezing the UI
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+}
+
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '', website: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'validation_error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const { playHover, playClick, playType } = useSfx();
 
-  const handleInputChange = (field: 'name' | 'email' | 'message', val: string) => {
+  const handleInputChange = (field: 'name' | 'email' | 'message' | 'website', val: string) => {
     setFormData(prev => ({ ...prev, [field]: val }));
-    playType();
+    if (field !== 'website') {
+      playType();
+    }
   };
 
   const handleSend = async () => {
+    // 1. Validation check
     if (!formData.name || !formData.email || !formData.message) {
       playClick();
       setStatus('validation_error');
@@ -28,29 +56,55 @@ export default function ContactPage() {
     setStatus('loading');
 
     try {
+      // 2. Fetch security challenge from the API endpoint
+      const challengeRes = await fetch('/api/contact');
+      if (!challengeRes.ok) {
+        throw new Error('Failed to retrieve security token');
+      }
+      const challengeData = await challengeRes.json();
+
+      // 3. Solve Cryptographic Proof-of-Work locally in browser (invisible CAPTCHA)
+      const nonce = await solveChallenge(challengeData);
+
+      // 4. Send submission payload along with solved challenge
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          challenge: {
+            ...challengeData,
+            nonce
+          }
+        }),
       });
 
       if (response.ok) {
         setStatus('success');
         setTimeout(() => {
           setStatus('idle');
-          setFormData({ name: '', email: '', message: '' });
+          setFormData({ name: '', email: '', message: '', website: '' });
         }, 3000);
       } else {
         console.error('Contact submission error');
+        const data = await response.json().catch(() => ({}));
+        setErrorMessage(data.error || 'Ошибка! Попробуйте позже');
         setStatus('error');
-        setTimeout(() => setStatus('idle'), 4000);
+        setTimeout(() => {
+          setStatus('idle');
+          setErrorMessage('');
+        }, 4500);
       }
     } catch (e) {
       console.error('Contact submission request failed:', e);
       setStatus('error');
-      setTimeout(() => setStatus('idle'), 4000);
+      setErrorMessage('Сбой соединения');
+      setTimeout(() => {
+        setStatus('idle');
+        setErrorMessage('');
+      }, 4500);
     }
   };
 
@@ -58,7 +112,7 @@ export default function ContactPage() {
     idle: 'Отправить →', 
     loading: 'Отправляю...', 
     success: '✓ Отправлено', 
-    error: 'Ошибка! Попробуйте позже',
+    error: errorMessage || 'Ошибка! Попробуйте позже',
     validation_error: 'Заполните все поля!'
   };
 
@@ -100,6 +154,18 @@ export default function ContactPage() {
               disabled={status === 'loading' || status === 'success'}
               onChange={(e) => handleInputChange('message', e.target.value)} 
               className="w-full bg-transparent border-0 border-b border-[rgba(184,173,158,0.15)] pb-3 text-text font-body focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted placeholder:font-mono placeholder:text-sm resize-none rounded-none text-base"
+            />
+          </div>
+
+          {/* Honeypot field - invisible to humans, irresistible to spam bots */}
+          <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden" aria-hidden="true">
+            <input 
+              type="text" 
+              name="website" 
+              value={formData.website} 
+              tabIndex={-1}
+              autoComplete="off"
+              onChange={(e) => handleInputChange('website', e.target.value)}
             />
           </div>
 
