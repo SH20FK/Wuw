@@ -1,10 +1,11 @@
 'use client';
 import { SectionLabel } from '@/components/ui/SectionLabel';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 import { Send, Github, Music, Gamepad2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useSfx } from '@/lib/useSfx';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 async function solveChallenge(challenge: { timestamp: number; randomValue: string; signature: string; difficulty: number }) {
   const { timestamp, randomValue, signature, difficulty } = challenge;
@@ -34,6 +35,8 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '', website: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'validation_error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<any>(null);
   const { playHover, playClick, playType } = useSfx();
 
   const handleInputChange = (field: 'name' | 'email' | 'message' | 'website', val: string) => {
@@ -88,6 +91,18 @@ export default function ContactPage() {
       }, 2500);
       return;
     }
+
+    // Check Turnstile Token
+    if (!turnstileToken) {
+      playClick();
+      setErrorMessage('Подождите проверку безопасности Cloudflare...');
+      setStatus('error');
+      setTimeout(() => {
+        setStatus('idle');
+        setErrorMessage('');
+      }, 3500);
+      return;
+    }
     
     playClick();
     setStatus('loading');
@@ -103,7 +118,7 @@ export default function ContactPage() {
       // 3. Solve Cryptographic Proof-of-Work locally in browser (invisible CAPTCHA)
       const nonce = await solveChallenge(challengeData);
 
-      // 4. Send submission payload along with solved challenge
+      // 4. Send submission payload along with solved challenge & Cloudflare Turnstile token
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
@@ -111,6 +126,7 @@ export default function ContactPage() {
         },
         body: JSON.stringify({
           ...formData,
+          turnstileToken,
           challenge: {
             ...challengeData,
             nonce
@@ -120,6 +136,10 @@ export default function ContactPage() {
 
       if (response.ok) {
         setStatus('success');
+        setTurnstileToken(null);
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
         setTimeout(() => {
           setStatus('idle');
           setFormData({ name: '', email: '', message: '', website: '' });
@@ -129,6 +149,10 @@ export default function ContactPage() {
         const data = await response.json().catch(() => ({}));
         setErrorMessage(data.error || 'Ошибка! Попробуйте позже');
         setStatus('error');
+        setTurnstileToken(null);
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
         setTimeout(() => {
           setStatus('idle');
           setErrorMessage('');
@@ -138,6 +162,10 @@ export default function ContactPage() {
       console.error('Contact submission request failed:', e);
       setStatus('error');
       setErrorMessage('Сбой соединения');
+      setTurnstileToken(null);
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
       setTimeout(() => {
         setStatus('idle');
         setErrorMessage('');
@@ -205,6 +233,18 @@ export default function ContactPage() {
               onChange={(e) => handleInputChange('website', e.target.value)}
             />
           </div>
+
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+            onSuccess={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+            options={{
+              theme: 'dark',
+              size: 'invisible'
+            }}
+          />
 
           <button 
             onClick={handleSend} 

@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const clientIp = (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0].trim();
-    const { name, email, message, website, challenge } = await req.json();
+    const { name, email, message, website, challenge, turnstileToken } = await req.json();
 
     // 1. Honeypot check - if the hidden "website" field is filled, silently ignore and return successful 200 representation
     if (website && typeof website === 'string' && website.trim() !== '') {
@@ -37,7 +37,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, note: 'processed' });
     }
 
-    // 2. Invisible Proof-of-Work validation
+    // 2. Cloudflare Turnstile Verification
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000';
+    if (!turnstileToken) {
+      return NextResponse.json({ error: 'Проверка безопасности Turnstile отсутствует!' }, { status: 400 });
+    }
+
+    try {
+      const verificationPayload = new URLSearchParams({
+        secret: turnstileSecret,
+        response: turnstileToken,
+        remoteip: clientIp,
+      });
+
+      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: verificationPayload.toString(),
+      });
+
+      const verifyData = await verifyRes.json();
+      if (!verifyData.success) {
+        console.warn(`Turnstile validation failed for IP ${clientIp}:`, verifyData);
+        return NextResponse.json({ error: 'Проверка безопасности не пройдена! Пожалуйста, повторите загрузку сайта.' }, { status: 400 });
+      }
+    } catch (err) {
+      console.error('Turnstile verification network error:', err);
+    }
+
+    // 3. Invisible Proof-of-Work validation
     if (!challenge || typeof challenge !== 'object') {
       console.warn(`Security check missing block from IP: ${clientIp}`);
       return NextResponse.json({ error: 'Security validation block missing' }, { status: 400 });
