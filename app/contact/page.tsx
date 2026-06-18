@@ -1,6 +1,6 @@
 'use client';
 import { SectionLabel } from '@/components/ui/SectionLabel';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
 import { Send, Github, Music, Gamepad2, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -32,7 +32,10 @@ async function solveChallenge(challenge: { timestamp: number; randomValue: strin
 }
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '', website: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [honeypotValue, setHoneypotValue] = useState('');
+  const [honeypotFieldName, setHoneypotFieldName] = useState('website');
+  const [challenge, setChallenge] = useState<any>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'validation_error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -40,29 +43,42 @@ export default function ContactPage() {
   const turnstileRef = useRef<any>(null);
   const { playHover, playClick, playType } = useSfx();
 
-  useState(() => {
-    // Fetch actual Turnstile site key dynamically from API to avoid build-time static string baking
-    if (typeof window !== 'undefined') {
-      fetch('/api/turnstile-config')
-        .then(res => res.json())
-        .then(data => {
-          if (data.siteKey) {
-            setSiteKey(data.siteKey);
-          } else {
-            setSiteKey('1x00000000000000000000AA');
-          }
-        })
-        .catch(() => {
+  useEffect(() => {
+    // Fetch Turnstile config dynamically
+    fetch('/api/turnstile-config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.siteKey) {
+          setSiteKey(data.siteKey);
+        } else {
           setSiteKey('1x00000000000000000000AA');
-        });
-    }
-  });
+        }
+      })
+      .catch(() => {
+        setSiteKey('1x00000000000000000000AA');
+      });
 
-  const handleInputChange = (field: 'name' | 'email' | 'message' | 'website', val: string) => {
+    // Fetch dynamic security challenge & dynamic honeypot field name on mount
+    fetch('/api/contact')
+      .then(res => res.json())
+      .then(data => {
+        setChallenge(data);
+        if (data.honeypotField) {
+          setHoneypotFieldName(data.honeypotField);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to prefetch security challenge ticket:', err);
+      });
+  }, []);
+
+  const handleInputChange = (field: 'name' | 'email' | 'message', val: string) => {
     setFormData(prev => ({ ...prev, [field]: val }));
-    if (field !== 'website') {
-      playType();
-    }
+    playType();
+  };
+
+  const handleHoneypotChange = (val: string) => {
+    setHoneypotValue(val);
   };
 
   const handleSend = async () => {
@@ -127,15 +143,18 @@ export default function ContactPage() {
     setStatus('loading');
 
     try {
-      // 2. Fetch security challenge from the API endpoint
-      const challengeRes = await fetch('/api/contact');
-      if (!challengeRes.ok) {
-        throw new Error('Failed to retrieve security token');
+      // 2. Use pre-fetched challenge or retrieve one if not loaded yet
+      let currentChallenge = challenge;
+      if (!currentChallenge) {
+        const challengeRes = await fetch('/api/contact');
+        if (!challengeRes.ok) {
+          throw new Error('Failed to retrieve security token');
+        }
+        currentChallenge = await challengeRes.json();
       }
-      const challengeData = await challengeRes.json();
 
       // 3. Solve Cryptographic Proof-of-Work locally in browser (invisible CAPTCHA)
-      const nonce = await solveChallenge(challengeData);
+      const nonce = await solveChallenge(currentChallenge);
 
       // 4. Send submission payload along with solved challenge & Cloudflare Turnstile token
       const response = await fetch('/api/contact', {
@@ -145,9 +164,10 @@ export default function ContactPage() {
         },
         body: JSON.stringify({
           ...formData,
+          [honeypotFieldName]: honeypotValue,
           turnstileToken,
           challenge: {
-            ...challengeData,
+            ...currentChallenge,
             nonce
           }
         }),
@@ -159,9 +179,22 @@ export default function ContactPage() {
         if (turnstileRef.current) {
           turnstileRef.current.reset();
         }
+        
+        // Pre-fetch a fresh challenge for any subsequent submissions
+        fetch('/api/contact')
+          .then(res => res.json())
+          .then(data => {
+            setChallenge(data);
+            if (data.honeypotField) {
+              setHoneypotFieldName(data.honeypotField);
+            }
+          })
+          .catch((err) => console.warn(err));
+
         setTimeout(() => {
           setStatus('idle');
-          setFormData({ name: '', email: '', message: '', website: '' });
+          setFormData({ name: '', email: '', message: '' });
+          setHoneypotValue('');
         }, 3000);
       } else {
         console.error('Contact submission error');
@@ -172,6 +205,18 @@ export default function ContactPage() {
         if (turnstileRef.current) {
           turnstileRef.current.reset();
         }
+
+        // Pre-fetch a fresh challenge on error
+        fetch('/api/contact')
+          .then(res => res.json())
+          .then(data => {
+            setChallenge(data);
+            if (data.honeypotField) {
+              setHoneypotFieldName(data.honeypotField);
+            }
+          })
+          .catch((err) => console.warn(err));
+
         setTimeout(() => {
           setStatus('idle');
           setErrorMessage('');
@@ -185,6 +230,18 @@ export default function ContactPage() {
       if (turnstileRef.current) {
         turnstileRef.current.reset();
       }
+
+      // Pre-fetch a fresh challenge on error
+      fetch('/api/contact')
+        .then(res => res.json())
+        .then(data => {
+          setChallenge(data);
+          if (data.honeypotField) {
+            setHoneypotFieldName(data.honeypotField);
+          }
+        })
+        .catch((err) => console.warn(err));
+
       setTimeout(() => {
         setStatus('idle');
         setErrorMessage('');
@@ -245,11 +302,11 @@ export default function ContactPage() {
           <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden" aria-hidden="true">
             <input 
               type="text" 
-              name="website" 
-              value={formData.website} 
+              name={honeypotFieldName} 
+              value={honeypotValue} 
               tabIndex={-1}
               autoComplete="off"
-              onChange={(e) => handleInputChange('website', e.target.value)}
+              onChange={(e) => handleHoneypotChange(e.target.value)}
             />
           </div>
 

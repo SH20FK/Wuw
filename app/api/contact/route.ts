@@ -9,7 +9,23 @@ export async function GET() {
   try {
     const timestamp = Date.now();
     const randomValue = crypto.randomBytes(8).toString('hex');
-    const dataToSign = `${timestamp}-${randomValue}`;
+    
+    // Pot of realistic decoy field names for spambots to trigger
+    const honeypotPool = [
+      'website', 
+      'homepage', 
+      'address_line_2', 
+      'fax_number', 
+      'secondary_email', 
+      'company_name', 
+      'postal_decoy', 
+      'middle_name'
+    ];
+    // Cryptographically select a random field name
+    const honeypotField = honeypotPool[crypto.randomInt(0, honeypotPool.length)];
+
+    // Sign the challenge data binding the dynamic honeypot token
+    const dataToSign = `${timestamp}-${randomValue}-${honeypotField}`;
     const signature = crypto.createHmac('sha256', CHALLENGE_SECRET)
       .update(dataToSign)
       .digest('hex');
@@ -18,7 +34,8 @@ export async function GET() {
       timestamp,
       randomValue,
       signature,
-      difficulty: 3 // '000' is incredibly quick for real browsers (~15-150ms) but expensive for spambots
+      difficulty: 3, // '000' prefix proof of work
+      honeypotField
     });
   } catch (error) {
     console.error('Challenge generation error:', error);
@@ -29,16 +46,40 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const clientIp = (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0].trim();
-    const { name, email, message, website, challenge, turnstileToken } = await req.json();
+    const requestBody = await req.json();
+    const { name, email, message, challenge, turnstileToken } = requestBody;
 
-    // 1. Honeypot check - if the hidden "website" field is filled, silently ignore and return successful 200 representation
-    if (website && typeof website === 'string' && website.trim() !== '') {
-      console.warn(`Honeypot triggered by website: "${website}" from IP ${clientIp}`);
+    // 1. Invisible Proof-of-Work and honeypot validation
+    if (!challenge || typeof challenge !== 'object') {
+      console.warn(`Security check missing block from IP: ${clientIp}`);
+      return NextResponse.json({ error: 'Security validation block missing' }, { status: 400 });
+    }
+
+    const { timestamp, randomValue, signature, nonce, honeypotField } = challenge;
+    if (!timestamp || !randomValue || !signature || nonce === undefined || !honeypotField) {
+      return NextResponse.json({ error: 'Security payload incomplete' }, { status: 400 });
+    }
+
+    // 2. Honeypot checks - check BOTH the dynamic key assigned and the traditional fallback "website" decoy
+    const dynamicHoneypotVal = requestBody[honeypotField];
+    if (dynamicHoneypotVal && typeof dynamicHoneypotVal === 'string' && dynamicHoneypotVal.trim() !== '') {
+      console.warn(`Dynamic Honeypot triggered! Field "${honeypotField}" filled with "${dynamicHoneypotVal}" from IP ${clientIp}`);
       return NextResponse.json({ success: true, note: 'processed' });
     }
 
-    // 2. Cloudflare Turnstile Verification
-    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000';
+    const fallbackHoneypotVal = requestBody.website;
+    if (fallbackHoneypotVal && typeof fallbackHoneypotVal === 'string' && fallbackHoneypotVal.trim() !== '') {
+      console.warn(`Fallback Honeypot triggered! Field "website" filled with "${fallbackHoneypotVal}" from IP ${clientIp}`);
+      return NextResponse.json({ success: true, note: 'processed' });
+    }
+
+    // 3. Cloudflare Turnstile Verification
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+    const isProd = host.includes('sh20fk.ru');
+    const turnstileSecret = isProd 
+      ? (process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000')
+      : '1x00000000000000000000000000000000';
+
     if (!turnstileToken) {
       return NextResponse.json({ error: 'Проверка безопасности Turnstile отсутствует!' }, { status: 400 });
     }
@@ -67,17 +108,6 @@ export async function POST(req: NextRequest) {
       console.error('Turnstile verification network error:', err);
     }
 
-    // 3. Invisible Proof-of-Work validation
-    if (!challenge || typeof challenge !== 'object') {
-      console.warn(`Security check missing block from IP: ${clientIp}`);
-      return NextResponse.json({ error: 'Security validation block missing' }, { status: 400 });
-    }
-
-    const { timestamp, randomValue, signature, nonce } = challenge;
-    if (!timestamp || !randomValue || !signature || nonce === undefined) {
-      return NextResponse.json({ error: 'Security payload incomplete' }, { status: 400 });
-    }
-
     // Verify timeframe: must be solved and submitted within the past 12 minutes
     const now = Date.now();
     const age = now - Number(timestamp);
@@ -87,7 +117,7 @@ export async function POST(req: NextRequest) {
 
     // Verify signature integrity
     const expectedSignature = crypto.createHmac('sha256', CHALLENGE_SECRET)
-      .update(`${timestamp}-${randomValue}`)
+      .update(`${timestamp}-${randomValue}-${honeypotField}`)
       .digest('hex');
 
     if (signature !== expectedSignature) {
