@@ -1,38 +1,57 @@
 'use client';
-import { useRef, useState, MouseEvent } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, MouseEvent } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { useSfx } from '@/lib/useSfx';
 
 export function Magnetic({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const { playHover } = useSfx();
 
+  const springConfig = { type: 'spring' as const, stiffness: 140, damping: 12, mass: 0.15 };
+  const smoothX = useSpring(x, springConfig);
+  const smoothY = useSpring(y, springConfig);
+
+  // Cached ref coordinates to avoid layout thrashing via getBoundingClientRect on mousemove
+  const rectRef = useRef<{ centerX: number; centerY: number } | null>(null);
+
+  const handleMouseEnter = () => {
+    playHover();
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      rectRef.current = {
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+      };
+    }
+  };
+
   const handleMouseMove = (e: MouseEvent) => {
-    if (!ref.current) return;
+    if (!rectRef.current) return;
     const { clientX, clientY } = e;
-    const { left, top, width, height } = ref.current.getBoundingClientRect();
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
+    const { centerX, centerY } = rectRef.current;
     const distanceX = clientX - centerX;
     const distanceY = clientY - centerY;
     
     // Smooth pull multiplier
-    setPosition({ x: distanceX * 0.35, y: distanceY * 0.35 });
+    x.set(distanceX * 0.35);
+    y.set(distanceY * 0.35);
   };
 
   const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
+    x.set(0);
+    y.set(0);
+    rectRef.current = null;
   };
 
   return (
     <motion.div
       ref={ref}
       onMouseMove={handleMouseMove}
-      onMouseEnter={playHover}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: 'spring', stiffness: 140, damping: 12, mass: 0.15 }}
+      style={{ x: smoothX, y: smoothY }}
       className="inline-block"
     >
       {children}

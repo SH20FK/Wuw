@@ -113,9 +113,6 @@ export default function WorkPage() {
       {/* Top section labels */}
       <div className="px-6 sm:px-16 flex items-center justify-between z-10">
         <SectionLabel>/ 03 WORK</SectionLabel>
-        <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest hidden sm:inline-block">
-          Kinetic Typography Roster
-        </span>
       </div>
 
       {/* Minimalist Kinetic List Parent */}

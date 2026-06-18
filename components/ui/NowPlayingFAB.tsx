@@ -127,6 +127,8 @@ export function NowPlayingFAB() {
 
   // Real-time animation loop for live analyser or sinusoidal simulated visuals
   useEffect(() => {
+    if (!isExpanded) return;
+
     let active = true;
     const frequencyData = new Uint8Array(32); // Holds the 32 bins of fftSize 64
     const currentHeights = [12, 12, 12, 12, 12, 12]; // Keep state inside loop closure for lerp calculation
@@ -182,7 +184,7 @@ export function NowPlayingFAB() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlayingPreview, isNowPlayingLive]);
+  }, [isPlayingPreview, isNowPlayingLive, isExpanded]);
 
   if (!nowPlaying) return null;
 
