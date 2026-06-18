@@ -41,6 +41,7 @@ export default function ContactPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [siteKey, setSiteKey] = useState<string | null>(null);
   const turnstileRef = useRef<any>(null);
+  const turnstileResolveRef = useRef<((token: string) => void) | null>(null);
   const { playHover, playClick, playType } = useSfx();
 
   useEffect(() => {
@@ -127,20 +128,46 @@ export default function ContactPage() {
       return;
     }
 
-    // Check Turnstile Token
-    if (!turnstileToken) {
-      playClick();
-      setErrorMessage('Подождите проверку безопасности Cloudflare...');
-      setStatus('error');
-      setTimeout(() => {
-        setStatus('idle');
-        setErrorMessage('');
-      }, 3500);
-      return;
-    }
-    
     playClick();
     setStatus('loading');
+
+    let currentToken = turnstileToken;
+    if (!currentToken) {
+      try {
+        if (turnstileRef.current) {
+          const tokenPromise = new Promise<string>((resolve, reject) => {
+            turnstileResolveRef.current = resolve;
+            
+            // set a timeout of 10 seconds to prevent hanging
+            const timeoutId = setTimeout(() => {
+              if (turnstileResolveRef.current === resolve) {
+                turnstileResolveRef.current = null;
+                reject(new Error('Время ожидания проверки Cloudflare истекло. Пожалуйста, попробуйте еще раз.'));
+              }
+            }, 10000);
+            
+            // Trigger programmatic execution of the invisible Turnstile widget
+            try {
+              turnstileRef.current.execute();
+            } catch (err) {
+              clearTimeout(timeoutId);
+              reject(err);
+            }
+          });
+          currentToken = await tokenPromise;
+        } else {
+          throw new Error('Система проверки Cloudflare еще не готова. Попробуйте снова через секунду.');
+        }
+      } catch (err: any) {
+        setErrorMessage(err.message || 'Ошибка безопасности Cloudflare.');
+        setStatus('error');
+        setTimeout(() => {
+          setStatus('idle');
+          setErrorMessage('');
+        }, 3500);
+        return;
+      }
+    }
 
     try {
       // 2. Use pre-fetched challenge or retrieve one if not loaded yet
@@ -165,7 +192,7 @@ export default function ContactPage() {
         body: JSON.stringify({
           ...formData,
           [honeypotFieldName]: honeypotValue,
-          turnstileToken,
+          turnstileToken: currentToken,
           challenge: {
             ...currentChallenge,
             nonce
@@ -314,9 +341,21 @@ export default function ContactPage() {
             <Turnstile
               ref={turnstileRef}
               siteKey={siteKey}
-              onSuccess={setTurnstileToken}
-              onExpire={() => setTurnstileToken(null)}
-              onError={() => setTurnstileToken(null)}
+              onSuccess={(token) => {
+                setTurnstileToken(token);
+                if (turnstileResolveRef.current) {
+                  turnstileResolveRef.current(token);
+                  turnstileResolveRef.current = null;
+                }
+              }}
+              onExpire={() => {
+                setTurnstileToken(null);
+                turnstileResolveRef.current = null;
+              }}
+              onError={() => {
+                setTurnstileToken(null);
+                turnstileResolveRef.current = null;
+              }}
               options={{
                 theme: 'dark',
                 size: 'invisible'
