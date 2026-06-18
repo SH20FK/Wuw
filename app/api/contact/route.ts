@@ -86,10 +86,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is too long (max 100 characters)' }, { status: 400 });
     }
 
-    // Basic regex check for email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return NextResponse.json({ error: 'Invalid email address format' }, { status: 400 });
+    // More robust regex check for email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailStr = email.trim();
+    if (!emailRegex.test(emailStr)) {
+      return NextResponse.json({ error: 'Неверный формат почты!' }, { status: 400 });
+    }
+
+    const lowerEmail = emailStr.toLowerCase();
+    const isObviousFake = 
+      lowerEmail.startsWith('test@') || 
+      lowerEmail.startsWith('admin@') || 
+      lowerEmail === 'asdf@asdf.com' ||
+      lowerEmail === 'test@test.com' ||
+      lowerEmail === '1@1.com' ||
+      lowerEmail.endsWith('.temp') ||
+      lowerEmail.endsWith('.tmp') ||
+      lowerEmail.includes('tempmail') ||
+      lowerEmail.includes('10minutemail');
+
+    if (isObviousFake) {
+      return NextResponse.json({ error: 'Пожалуйста, введите реальный email!' }, { status: 400 });
     }
 
     if (!message || typeof message !== 'string' || !message.trim()) {

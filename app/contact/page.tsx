@@ -51,6 +51,43 @@ export default function ContactPage() {
       setTimeout(() => setStatus('idle'), 2500);
       return;
     }
+
+    const emailStr = formData.email.trim();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(emailStr)) {
+      playClick();
+      setErrorMessage('Некорректный формат email!');
+      setStatus('error');
+      setTimeout(() => {
+        setStatus('idle');
+        setErrorMessage('');
+      }, 2500);
+      return;
+    }
+
+    // Block obvious dummy emails
+    const lowerEmail = emailStr.toLowerCase();
+    const isObviousFake = 
+      lowerEmail.startsWith('test@') || 
+      lowerEmail.startsWith('admin@') || 
+      lowerEmail === 'asdf@asdf.com' ||
+      lowerEmail === 'test@test.com' ||
+      lowerEmail === '1@1.com' ||
+      lowerEmail.endsWith('.temp') ||
+      lowerEmail.endsWith('.tmp') ||
+      lowerEmail.includes('tempmail') ||
+      lowerEmail.includes('10minutemail');
+
+    if (isObviousFake) {
+      playClick();
+      setErrorMessage('Пожалуйста, введите реальный email!');
+      setStatus('error');
+      setTimeout(() => {
+        setStatus('idle');
+        setErrorMessage('');
+      }, 2500);
+      return;
+    }
     
     playClick();
     setStatus('loading');
