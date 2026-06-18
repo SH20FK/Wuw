@@ -2,19 +2,19 @@
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { motion } from 'framer-motion';
 import { Magnetic } from '@/components/ui/Magnetic';
-import { ProjectCard, Project } from '@/components/ui/ProjectCard';
 import Link from 'next/link';
 import { useRef, useEffect, useState } from 'react';
 import { useSfx } from '@/lib/useSfx';
-import { ArrowRight, MoveRight } from 'lucide-react';
+import { MoveRight } from 'lucide-react';
+import { WarpImage } from '@/components/three/WarpImage';
+import { TechChip } from '@/components/ui/TechChip';
 
-const PROJECTS: Project[] = [
+const PROJECTS = [
   {
     id: '1',
     year: '2024-2026',
     type: 'Mobile / Flutter',
     title: 'NiosMess',
-    description: '',
     image: 'https://i.ibb.co/ZzPD74LR/IMG-20260617-125422.png',
     url: 'https://github.com/SH20FK',
     tags: ['Flutter', 'Dart', 'WebSockets']
@@ -24,7 +24,6 @@ const PROJECTS: Project[] = [
     year: '24-25',
     type: 'Minecraft Mod / Fabric',
     title: 'Project3',
-    description: '',
     image: 'https://i.ibb.co/bgDsc3J9/IMG-20260617-130156.png',
     url: 'https://github.com/SH20FK',
     tags: ['Java', 'Fabric API', 'MinecraftGL']
@@ -34,10 +33,8 @@ const PROJECTS: Project[] = [
 export default function WorkPage() {
   const textRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { playHover, playClick } = useSfx();
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isLinkHovered, setIsLinkHovered] = useState(false);
+  const [isCollabHovered, setIsCollabHovered] = useState(false);
 
   // Mouse move kinetic text skew effect for the large banner CTA
   useEffect(() => {
@@ -102,43 +99,8 @@ export default function WorkPage() {
     };
   }, []);
 
-  // Vertical wheel to Horizontal Scroll Redirector on Desktop
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY === 0) return;
-      const isScrollable = el.scrollWidth > el.clientWidth;
-      const isAtStart = el.scrollLeft <= 0;
-      const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
-
-      if (isScrollable) {
-        // Prevent default only if we are taking action in bounds
-        if ((e.deltaY > 0 && !isAtEnd) || (e.deltaY < 0 && !isAtStart)) {
-          e.preventDefault();
-          el.scrollLeft += e.deltaY * 0.85; // smooth step factor
-        }
-      }
-    };
-
-    const handleScroll = () => {
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      if (maxScroll <= 0) return;
-      setScrollProgress(el.scrollLeft / maxScroll);
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('scroll', handleScroll);
-
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
   return (
-    <main className="w-full relative bg-bg min-h-screen flex flex-col justify-between overflow-hidden py-16 md:py-24 select-none">
+    <main className="w-full relative bg-bg min-h-screen flex flex-col justify-between overflow-hidden py-14 md:py-20 select-none">
       {/* Soft background ambient gradient glow */}
       <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[var(--color-accent)]/[0.02] rounded-full blur-[130px] pointer-events-none" />
 
@@ -146,89 +108,170 @@ export default function WorkPage() {
       <div className="px-6 sm:px-16 flex items-center justify-between">
         <SectionLabel>/ 03 WORK</SectionLabel>
         <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest hidden sm:inline-block">
-          Колесико мыши листает вбок
+          Material 3 Expressive Showcase
         </span>
       </div>
 
-      {/* Horizontal horizontal scrolling projects track */}
-      <div className="my-auto py-6 md:py-10 relative">
-        <div 
-          ref={scrollContainerRef}
-          className="flex flex-nowrap overflow-x-auto gap-4 md:gap-8 px-6 sm:px-16 pb-6 md:pb-8 scrollbar-none snap-x snap-mandatory cursor-grab active:cursor-grabbing"
-          style={{ scrollBehavior: 'auto' }}
+      {/* Material 3 Expressive Parent Container */}
+      <div 
+        className="w-full max-w-5xl mx-auto px-4 md:px-0 my-auto py-4 relative z-10 transition-all duration-[1000ms]"
+        style={{
+          '--accent-tone-light': 'color-mix(in srgb, var(--color-accent) 60%, #ffffff 40%)',
+          '--accent-tone-dark': 'color-mix(in srgb, var(--color-accent) 70%, #000000 30%)',
+        } as React.CSSProperties}
+      >
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+          className="grid grid-cols-1 md:grid-cols-2 bg-[#121016]/80 border border-[rgba(184,173,158,0.12)] shadow-[0_0_60px_-15px_rgba(var(--color-accent),0.07)] overflow-hidden"
+          style={{
+            borderRadius: 'clamp(32px, 5vw, 56px)',
+          }}
         >
-          {PROJECTS.map((project, idx) => (
-            <motion.div 
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: idx * 0.12 }}
-              className="snap-start shrink-0"
+          {/* ZONE 1: NiosMess (Grid: Top Left) */}
+          <Link 
+            href={PROJECTS[0].url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onMouseEnter={playHover}
+            onClick={playClick}
+            className="work-zone group relative h-[380px] md:h-[450px] overflow-hidden flex flex-col justify-end p-6 md:p-8 border-b md:border-b md:border-r border-[rgba(184,173,158,0.12)] cursor-pointer"
+          >
+            {/* Background Project Image */}
+            <div className="absolute inset-0 z-0">
+              <WarpImage src={PROJECTS[0].image} alt={PROJECTS[0].title} />
+              {/* Subtle darkened vignette bottom for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-bg/95 via-transparent to-transparent opacity-80" />
+            </div>
+
+            {/* Dynamic GLSL Film Grain & Blur Fog layer */}
+            <div className="absolute inset-0 z-10 fog-layer" />
+
+            {/* Top Left Details */}
+            <div className="absolute top-6 left-6 font-mono text-[9px] text-[#ffffff] font-bold uppercase tracking-widest z-25 flex items-center gap-1.5 bg-surface/90 px-3 py-1.5 rounded-full border border-[rgba(255,255,255,0.15)] backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-tone-light)] animate-pulse" />
+              <span>{PROJECTS[0].type}</span>
+            </div>
+
+            {/* Top Right Year */}
+            <div className="absolute top-6 right-6 font-mono text-[10px] text-text-muted z-20 font-medium">
+              {PROJECTS[0].year}
+            </div>
+
+            {/* Bottom Info */}
+            <div className="relative z-20 text-left pointer-events-none">
+              <h3 className="font-display text-3xl font-medium tracking-tight text-text mb-3 group-hover:text-[var(--accent-tone-light)] transition-colors duration-500">
+                {PROJECTS[0].title}
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {PROJECTS[0].tags.map(tag => (
+                  <TechChip key={tag}>{tag}</TechChip>
+                ))}
+              </div>
+            </div>
+          </Link>
+
+          {/* ZONE 2: Project3 (Grid: Top Right) */}
+          <Link 
+            href={PROJECTS[1].url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onMouseEnter={playHover}
+            onClick={playClick}
+            className="work-zone group relative h-[380px] md:h-[450px] overflow-hidden flex flex-col justify-end p-6 md:p-8 border-b border-[rgba(184,173,158,0.12)] cursor-pointer"
+          >
+            {/* Background Project Image */}
+            <div className="absolute inset-0 z-0">
+              <WarpImage src={PROJECTS[1].image} alt={PROJECTS[1].title} />
+              <div className="absolute inset-0 bg-gradient-to-t from-bg/95 via-transparent to-transparent opacity-80" />
+            </div>
+
+            {/* Dynamic GLSL Film Grain & Blur Fog layer */}
+            <div className="absolute inset-0 z-10 fog-layer" />
+
+            {/* TENSION DETAIL: Sharp corner solid technical tag in the top-right corner to contrast with soft organic elements */}
+            <div className="absolute top-6 right-6 font-mono text-[9px] text-bg bg-[var(--accent-tone-dark)] font-bold uppercase tracking-widest px-3 py-1.5 border border-black z-25 rounded-none shadow-[2px_2px_0px_rgba(255,255,255,0.5)] select-none">
+              SYSTEM: FABRIC CLIENT // {PROJECTS[1].year}
+            </div>
+
+            {/* Top Left Details */}
+            <div className="absolute top-6 left-6 font-mono text-[9px] text-[#ffffff] font-bold uppercase tracking-widest z-25 flex items-center gap-1.5 bg-surface/90 px-3 py-1.5 rounded-full border border-[rgba(255,255,255,0.15)] backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-tone-dark)]" />
+              <span>{PROJECTS[1].type}</span>
+            </div>
+
+            {/* Bottom Info */}
+            <div className="relative z-20 text-left pointer-events-none">
+              <h3 className="font-display text-3xl font-medium tracking-tight text-text mb-3 group-hover:text-[var(--accent-tone-dark)] transition-colors duration-500">
+                {PROJECTS[1].title}
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {PROJECTS[1].tags.map(tag => (
+                  <TechChip key={tag}>{tag}</TechChip>
+                ))}
+              </div>
+            </div>
+          </Link>
+
+          {/* ZONE 3: Bottom Collaboration (Grid: Full Width Bottom) */}
+          <div 
+            ref={containerRef}
+            className="col-span-1 md:col-span-2 relative min-h-[340px] md:min-h-[380px] overflow-hidden flex flex-col justify-center items-center p-8 md:p-12 text-center"
+          >
+            {/* Dynamic GLSL Film Grain & Blur Fog layer */}
+            <div className="absolute inset-0 z-10 fog-layer" />
+
+            {/* Morphing Asymmetrical custom-glowing polygon behind text, constrained inside Zone 3 */}
+            <div 
+              className="absolute inset-0 pointer-events-none z-0 mix-blend-screen opacity-100 flex items-center justify-center"
             >
-              <ProjectCard project={project} />
-            </motion.div>
-          ))}
-
-          {/* Connected Slide leading to Contact Action represent ending of reel */}
-          <div ref={containerRef} className="snap-start shrink-0 flex items-center justify-center pl-4 pr-12 md:pl-8 md:pr-24">
-            <Magnetic>
-              <Link 
-                href="/contact"
-                onMouseEnter={() => {
-                  playHover();
-                  setIsLinkHovered(true);
+              <div 
+                className="w-[85%] h-[85%] bg-gradient-to-tr from-[var(--color-accent)]/20 to-[var(--color-accent-sub)]/10 transition-all duration-[800ms]"
+                style={{
+                  filter: 'blur(32px)',
+                  clipPath: isCollabHovered ? 'polygon(4% 0%, 100% 6%, 96% 100%, 0% 92%)' : 'polygon(0% 8%, 92% 0%, 100% 88%, 6% 100%)',
                 }}
-                onMouseLeave={() => setIsLinkHovered(false)}
-                onClick={playClick}
-                className="inline-block group focus:outline-none select-none relative px-10 py-8"
-              >
-                {/* Asymmetrical geometric backdrop glow morphing on Link hover */}
-                <div 
-                  className="absolute inset-0 bg-accent/[0.045] pointer-events-none -z-10 mix-blend-screen transition-all duration-[600ms]"
-                  style={{
-                    filter: 'blur(16px)',
-                    clipPath: isLinkHovered ? 'polygon(4% 0%, 100% 6%, 96% 100%, 0% 92%)' : 'polygon(0% 8%, 92% 0%, 100% 88%, 6% 100%)',
-                    transition: 'clip-path 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
+              />
+            </div>
+
+            {/* Kinetic / Magnetic container */}
+            <div className="relative z-20 w-full max-w-2xl flex flex-col items-center">
+              <Magnetic>
+                <Link 
+                  href="/contact"
+                  onMouseEnter={() => {
+                    playHover();
+                    setIsCollabHovered(true);
                   }}
-                />
-
-                <div className="flex items-center gap-2.5 font-mono text-[10px] sm:text-xs text-text-muted mb-4 uppercase tracking-widest select-none">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  </span>
-                  <span>ОБСУДИМ И ТВОЙ ПРОЕКТ // 2026</span>
-                </div>
-                <div 
-                  ref={textRef}
-                  className="font-display text-[clamp(2rem,6vw,6.5rem)] text-text group-hover:text-accent font-light leading-[0.95] tracking-tighter transition-colors duration-500 origin-left ease-out"
+                  onMouseLeave={() => setIsCollabHovered(false)}
+                  onClick={playClick}
+                  className="inline-block group focus:outline-none select-none px-8 py-6"
                 >
-                  ОБСУДИТЬ<br />ПРОЕКТ →
-                </div>
-                <div className="mt-4 flex items-center gap-2 font-mono text-[10px] text-accent font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span>Перейти к контактам</span>
-                  <MoveRight className="w-3.5 h-3.5" />
-                </div>
-              </Link>
-            </Magnetic>
-          </div>
-        </div>
+                  <div className="flex items-center justify-center gap-2.5 font-mono text-[10px] sm:text-xs text-text-muted mb-4 uppercase tracking-widest select-none">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span>ОБСУДИМ И ТВОЙ ПРОЕКТ // 2026</span>
+                  </div>
 
-        {/* Minimal Scrollbar Progress Track at bottom */}
-        <div className="px-6 sm:px-16 max-w-xs sm:max-w-sm mt-4">
-          <div className="flex items-center justify-between font-mono text-[9px] text-text-muted uppercase tracking-wider mb-2">
-            <span>Прокрутка</span>
-            <span>{Math.round(scrollProgress * 100)}%</span>
+                  <div 
+                    ref={textRef}
+                    className="font-display text-[clamp(2rem,5vw,5rem)] text-text group-hover:text-accent font-light leading-[1.05] tracking-tighter transition-colors duration-500 origin-center ease-out"
+                  >
+                    ОБСУДИТЬ<br />ПРОЕКТ →
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[10px] text-accent font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span>Перейти к контактам</span>
+                    <MoveRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
+              </Magnetic>
+            </div>
           </div>
-          <div className="w-full h-[1px] bg-[rgba(184,173,158,0.06)] relative">
-            <motion.div 
-              className="absolute left-0 top-0 h-full bg-accent origin-left"
-              style={{ scaleX: scrollProgress, width: '100%' }}
-              transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            />
-          </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Footer bar */}
@@ -243,4 +286,3 @@ export default function WorkPage() {
     </main>
   );
 }
-
