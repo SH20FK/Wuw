@@ -10,8 +10,17 @@ const nextConfig = {
       { protocol: 'https', hostname: 'imgur.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'lastfm.freetls.fastly.net' },
+      { protocol: 'https', hostname: 'lastfm-img.freetls.fastly.net' },
       { protocol: 'https', hostname: 'lastfm-img2.akamaized.net' },
-      { protocol: 'https', hostname: 'i.ibb.co' }
+      { protocol: 'https', hostname: 'lastfm-img3.akamaized.net' },
+      { protocol: 'https', hostname: '*.freetls.fastly.net' },
+      { protocol: 'https', hostname: '*.akamaized.net' },
+      { protocol: 'https', hostname: 'images.last.fm' },
+      { protocol: 'https', hostname: 'assets.last.fm' },
+      { protocol: 'https', hostname: 'i.scdn.co' },
+      { protocol: 'https', hostname: 'coverartarchive.org' },
+      { protocol: 'https', hostname: 'i.ibb.co' },
+      { protocol: 'https', hostname: 'picsum.photos' }
     ]
   }
 };

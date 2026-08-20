@@ -5,6 +5,11 @@ export const dynamic = 'force-dynamic';
 
 const CHALLENGE_SECRET = process.env.TELEGRAM_BOT_TOKEN || 'fallback-portfolio-secret-sh20fk';
 
+const cleanKey = (key: string | undefined): string => {
+  if (!key) return '';
+  return key.trim().replace(/^['"]|['"]$/g, '');
+};
+
 export async function GET() {
   try {
     const timestamp = Date.now();
@@ -76,9 +81,16 @@ export async function POST(req: NextRequest) {
     // 3. Cloudflare Turnstile Verification
     const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
     const isProd = host.includes('sh20fk.ru');
-    const turnstileSecret = isProd 
-      ? (process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000')
-      : '1x00000000000000000000000000000000';
+
+    const rawSiteKey = cleanKey(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
+    const rawSecretKey = cleanKey(process.env.TURNSTILE_SECRET_KEY);
+
+    const isSiteKeyConfigured = rawSiteKey && !rawSiteKey.startsWith('1x');
+    const isSecretKeyConfigured = rawSecretKey && !rawSecretKey.startsWith('1x');
+
+    const useProdKeys = isProd && isSiteKeyConfigured && isSecretKeyConfigured;
+
+    const turnstileSecret = useProdKeys ? rawSecretKey : '1x00000000000000000000000000000000';
 
     if (!turnstileToken) {
       return NextResponse.json({ error: 'Проверка безопасности Turnstile отсутствует!' }, { status: 400 });
