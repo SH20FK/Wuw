@@ -27,6 +27,7 @@ export function getTrackImage(track: any): string {
       // Skip Last.fm standard placeholder star hashes and general default image paths
       if (
         url.includes('2a96cbd30df375e2f75a98af74f1ed0a') ||
+        url.includes('2a96cbd8b46e442fc41c2b86b821562f') ||
         url.includes('default_image') ||
         url.includes('lastfm_avatar') ||
         url === ''
@@ -42,7 +43,7 @@ export function getTrackImage(track: any): string {
   return fallbackImg;
 }
 
-export function getAverageColor(imgUrl: string): Promise<string> {
+function computeAverageColor(imgUrl: string): Promise<string> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') {
       return resolve('#D97757');
@@ -127,4 +128,28 @@ export function getAverageColor(imgUrl: string): Promise<string> {
       resolve('#D97757');
     };
   });
+}
+
+const averageColorCache = new Map<string, Promise<string>>();
+
+/**
+ * Cached wrapper. The same cover is used by the hero sphere, the music page and
+ * the poller, so without this each of them would download it again for colour
+ * extraction.
+ */
+export function getAverageColor(imgUrl: string): Promise<string> {
+  if (!imgUrl) return Promise.resolve('#D97757');
+
+  const cached = averageColorCache.get(imgUrl);
+  if (cached) return cached;
+
+  const pending = computeAverageColor(imgUrl).catch(() => '#D97757');
+  averageColorCache.set(imgUrl, pending);
+
+  if (averageColorCache.size > 40) {
+    const oldest = averageColorCache.keys().next().value;
+    if (oldest) averageColorCache.delete(oldest);
+  }
+
+  return pending;
 }

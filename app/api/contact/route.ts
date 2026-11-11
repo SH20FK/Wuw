@@ -90,7 +90,8 @@ export async function POST(req: NextRequest) {
 
     const useProdKeys = isProd && isSiteKeyConfigured && isSecretKeyConfigured;
 
-    const turnstileSecret = useProdKeys ? rawSecretKey : '1x00000000000000000000000000000000';
+    // Always-pass test secret (Cloudflare testing keys, актуальные на 2026)
+    const turnstileSecret = useProdKeys ? rawSecretKey : '1x0000000000000000000000000000000AA';
 
     if (!turnstileToken) {
       return NextResponse.json({ error: 'Проверка безопасности Turnstile отсутствует!' }, { status: 400 });

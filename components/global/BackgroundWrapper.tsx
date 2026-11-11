@@ -1,101 +1,78 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useRef } from 'react';
+import useLastFmStore from '@/store/useLastFmStore';
 
-const CanvasObj = dynamic(() => import('@/components/three/GrainCanvas'), { ssr: false });
-
-function isWebGLAvailable() {
-  if (typeof window === 'undefined') return false;
-  try {
-    const canvas = document.createElement('canvas');
-    return !!(
-      window.WebGLRenderingContext &&
-      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-    );
-  } catch (e) {
-    return false;
-  }
-}
-
+/**
+ * Ambient background: a composited spotlight + a CSS film-grain layer.
+ * Both are GPU-only (transform / opacity), no per-frame gradients or shaders,
+ * so the background costs nothing while the page is idle.
+ */
 export function BackgroundWrapper() {
-  const [hasWebGL, setHasWebGL] = useState(true);
   const spotlightRef = useRef<HTMLDivElement>(null);
-  
-  // Keep mouse target and current smooth values in refs to avoid any React re-renders on every frame/mouse move
-  const mousePosRef = useRef({ x: 0, y: 0 });
-  const smoothPosRef = useRef({ x: 0, y: 0 });
+  const grainIntensity = useLastFmStore((state) => state.grainIntensity);
+  const grainSpeed = useLastFmStore((state) => state.grainSpeed);
 
   useEffect(() => {
-    setHasWebGL(isWebGLAvailable());
-    
-    // Set initial position to center of screen before mouse moves
-    const initX = window.innerWidth / 2;
-    const initY = window.innerHeight / 2;
-    mousePosRef.current = { x: initX, y: initY };
-    smoothPosRef.current = { x: initX, y: initY };
-    
-    if (spotlightRef.current) {
-      spotlightRef.current.style.background = `radial-gradient(750px circle at ${initX}px ${initY}px, var(--color-accent-glow), transparent 75%)`;
-    }
-  }, []);
+    const el = spotlightRef.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  // Listen to mouse moving across window
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mousePosRef.current = { x: e.clientX, y: e.clientY };
+    const SIZE = 1500;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let x = targetX;
+    let y = targetY;
+    let raf = 0;
+
+    const paint = () => {
+      el.style.transform = `translate3d(${x - SIZE / 2}px, ${y - SIZE / 2}px, 0)`;
     };
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
-  // Smooth out coordinate tracking with viscous spring effect in a single rAF loop
-  useEffect(() => {
-    let rafId: number;
-    let active = true;
-    
     const tick = () => {
-      if (!active) return;
-      
-      const targetMouse = mousePosRef.current;
-      const currentSmooth = smoothPosRef.current;
-      
-      const dx = targetMouse.x - currentSmooth.x;
-      const dy = targetMouse.y - currentSmooth.y;
-      
-      const nextX = currentSmooth.x + dx * 0.025; // slow viscous response
-      const nextY = currentSmooth.y + dy * 0.025;
-      
-      smoothPosRef.current = { x: nextX, y: nextY };
-      
-      // Write directly to div ref style to avoid React state re-renders entirely
-      if (spotlightRef.current) {
-        spotlightRef.current.style.background = `radial-gradient(750px circle at ${nextX}px ${nextY}px, var(--color-accent-glow), transparent 75%)`;
+      x += (targetX - x) * 0.07;
+      y += (targetY - y) * 0.07;
+      paint();
+
+      if (Math.abs(targetX - x) < 0.5 && Math.abs(targetY - y) < 0.5) {
+        raf = 0;
+        return;
       }
-      
-      rafId = requestAnimationFrame(tick);
+      raf = requestAnimationFrame(tick);
     };
-    
-    rafId = requestAnimationFrame(tick);
+
+    const onMove = (e: PointerEvent) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    paint();
+    window.addEventListener('pointermove', onMove, { passive: true });
     return () => {
-      active = false;
-      cancelAnimationFrame(rafId);
+      window.removeEventListener('pointermove', onMove);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
     <>
-      {/* 1. Soft, ultra-low opacity spotlight following mouse coordinates behind page content */}
-      <div 
+      <div
         ref={spotlightRef}
-        className="fixed inset-0 pointer-events-none z-0"
+        className="fixed top-0 left-0 w-[1500px] h-[1500px] rounded-full pointer-events-none z-0 will-change-transform"
         style={{
-          background: `radial-gradient(750px circle at 50% 50%, var(--color-accent-glow), transparent 75%)`,
+          background: 'radial-gradient(circle closest-side, var(--color-accent-glow), transparent 100%)',
           opacity: 0.28,
         }}
       />
 
-      {/* 2. Dynamic GLSL film grain overlay canvas */}
-      {hasWebGL && <CanvasObj />}
+      <div
+        className="grain-layer"
+        aria-hidden="true"
+        style={{
+          opacity: grainIntensity,
+          animationDuration: `${Math.max(0.5, 1.4 / Math.max(0.2, grainSpeed))}s`,
+        }}
+      />
     </>
   );
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useRef, useState } from 'react';
 import useLastFmStore from '@/store/useLastFmStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,14 +6,12 @@ import { spring } from '@/lib/animations';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getTrackImage } from '@/lib/utils';
-import { useSfx } from '@/lib/useSfx';
 import { Play, Pause, X, ArrowUpRight, Music } from 'lucide-react';
 
 export function NowPlayingFAB() {
   const { nowPlaying } = useLastFmStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
-  const { playClick, playHover } = useSfx();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -98,7 +96,6 @@ export function NowPlayingFAB() {
   // Play/Pause handling for iTunes preview URL
   const togglePlayPreview = (e: React.MouseEvent) => {
     e.stopPropagation();
-    playClick();
 
     if (!previewUrl) return;
 
@@ -198,7 +195,6 @@ export function NowPlayingFAB() {
           <motion.div
             layoutId="fab-container"
             onClick={() => setIsExpanded(true)}
-            onMouseEnter={playHover}
             initial={{ opacity: 0, y: 30, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.9 }}
@@ -208,10 +204,10 @@ export function NowPlayingFAB() {
           >
             <div className="relative w-8 h-8 rounded-md overflow-hidden shrink-0">
               {coverUrl ? (
-                <Image src={coverUrl} alt="cover" fill className="object-cover" referrerPolicy="no-referrer" />
+                <Image src={coverUrl} alt="cover" fill sizes="32px" className="object-cover" referrerPolicy="no-referrer" />
               ) : (
                 <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                  <Music className="w-4 h-4 text-text-muted" />
+                  <Music className="w-4 h-4 text-text-muted" strokeWidth={1.5} />
                 </div>
               )}
               {isNowPlayingLive && (
@@ -227,11 +223,14 @@ export function NowPlayingFAB() {
             {/* Micro compact equalizers */}
             <div className="flex items-end gap-[2px] h-3 w-4 shrink-0 pb-0.5">
               {[...Array(3)].map((_, i) => (
-                <motion.span
+                <span
                   key={i}
-                  animate={isNowPlayingLive ? { height: ['20%', '100%', '20%'] } : { height: '20%' }}
-                  transition={{ duration: 0.6 + i * 0.15, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-[2px] bg-accent inline-block"
+                  className={`w-[2px] h-full bg-accent inline-block ${isNowPlayingLive ? 'eq-bar' : ''}`}
+                  style={
+                    isNowPlayingLive
+                      ? { animationDelay: `${i * 0.15}s`, animationDuration: `${0.6 + i * 0.15}s` }
+                      : { transform: 'scaleY(0.2)', transformOrigin: 'bottom' }
+                  }
                 />
               ))}
             </div>
@@ -255,10 +254,10 @@ export function NowPlayingFAB() {
                 </span>
               </div>
               <button 
-                onClick={(e) => { e.stopPropagation(); playClick(); setIsExpanded(false); }} 
+                onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
                 className="text-text-muted hover:text-accent transition-colors p-1 rounded-full hover:bg-white/5 cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
@@ -266,10 +265,10 @@ export function NowPlayingFAB() {
             <div className="flex gap-4">
               <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-[rgba(184,173,158,0.1)] shrink-0 self-start">
                 {coverUrl ? (
-                  <Image src={coverUrl} alt="cover" fill className="object-cover" referrerPolicy="no-referrer" />
+                  <Image src={coverUrl} alt="cover" fill sizes="64px" className="object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full bg-surface/50 flex items-center justify-center">
-                    <Music className="w-6 h-6 text-text-muted" />
+                    <Music className="w-6 h-6 text-text-muted" strokeWidth={1.5} />
                   </div>
                 )}
               </div>
@@ -310,12 +309,12 @@ export function NowPlayingFAB() {
                 >
                   {isPlayingPreview ? (
                     <>
-                      <Pause className="w-3 h-3" />
+                      <Pause className="w-3 h-3" strokeWidth={1.5} />
                       <span>Stop</span>
                     </>
                   ) : (
                     <>
-                      <Play className="w-3 h-3" />
+                      <Play className="w-3 h-3" strokeWidth={1.5} />
                       <span>Preview</span>
                     </>
                   )}
@@ -341,11 +340,11 @@ export function NowPlayingFAB() {
               </div>
               <Link 
                 href="/music" 
-                onClick={() => { playClick(); setIsExpanded(false); }}
+                onClick={() => setIsExpanded(false)}
                 className="flex items-center gap-0.5 font-mono text-accent hover:underline uppercase tracking-wide group"
               >
                 <span>Full stats</span>
-                <ArrowUpRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={1.5} />
               </Link>
             </div>
           </motion.div>

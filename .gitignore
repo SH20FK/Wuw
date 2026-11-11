@@ -1,7 +1,12 @@
-node_modules/
+﻿node_modules/
 .next/
+out/
+build/
 coverage/
 .DS_Store
 *.log
+*.tsbuildinfo
+next-env.d.ts.swp
+.vercel/
 .env*
 !.env.example

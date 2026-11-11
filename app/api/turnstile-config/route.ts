@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
   // This avoids situations where one key is set up but the other is missing/mismatched.
   const useProdKeys = isProd && isSiteKeyConfigured && isSecretKeyConfigured;
   
-  const siteKey = useProdKeys ? rawSiteKey : '1x00000000000000000000AA';
+  // Always-pass invisible test sitekey (Cloudflare testing keys, актуальные на 2026)
+  const siteKey = useProdKeys ? rawSiteKey : '1x00000000000000000000BB';
     
   return NextResponse.json({ siteKey });
 }

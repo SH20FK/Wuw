@@ -1,42 +1,11 @@
 'use client';
 import { useLastFm } from '@/hooks/useLastFm';
-import useLastFmStore from '@/store/useLastFmStore';
-import { useEffect } from 'react';
 
+/**
+ * Boots the Last.fm polling. The accent colour is applied by AccentSplash
+ * (and by the inline script in the document head before first paint).
+ */
 export function ClientBoot() {
   useLastFm();
-  const accentColor = useLastFmStore((state) => state.accentColor);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const root = document.documentElement;
-    root.style.setProperty('--color-accent', accentColor);
-    
-    let r = 230, g = 28, b = 28;
-    if (accentColor.startsWith('rgb')) {
-      const parts = accentColor.match(/\d+/g);
-      if (parts && parts.length >= 3) {
-        r = parseInt(parts[0], 10);
-        g = parseInt(parts[1], 10);
-        b = parseInt(parts[2], 10);
-      }
-    } else if (accentColor.startsWith('#')) {
-      const hex = accentColor.replace('#', '');
-      if (hex.length === 6) {
-        r = parseInt(hex.substring(0, 2), 16);
-        g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
-      }
-    }
-    
-    root.style.setProperty('--color-accent-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-    const sr = Math.max(0, Math.floor(r * 0.75));
-    const sg = Math.max(0, Math.floor(g * 0.65));
-    const sb = Math.max(0, Math.floor(b * 0.55));
-    root.style.setProperty('--color-accent-sub', `rgb(${sr}, ${sg}, ${sb})`);
-
-  }, [accentColor]);
-
   return null;
 }
-

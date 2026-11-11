@@ -1,10 +1,9 @@
-'use client';
+﻿'use client';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { spring } from '@/lib/animations';
-import { Send, Github, Music, Gamepad2, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useSfx } from '@/lib/useSfx';
+import { SiTelegram, SiGithub, SiLastdotfm, SiSteam } from 'react-icons/si';
 import { Turnstile } from '@marsidev/react-turnstile';
 
 async function solveChallenge(challenge: { timestamp: number; randomValue: string; signature: string; difficulty: number }) {
@@ -42,7 +41,6 @@ export default function ContactPage() {
   const [siteKey, setSiteKey] = useState<string | null>(null);
   const turnstileRef = useRef<any>(null);
   const turnstileResolveRef = useRef<((token: string) => void) | null>(null);
-  const { playHover, playClick, playType } = useSfx();
 
   useEffect(() => {
     // Fetch Turnstile config dynamically
@@ -75,7 +73,6 @@ export default function ContactPage() {
 
   const handleInputChange = (field: 'name' | 'email' | 'message', val: string) => {
     setFormData(prev => ({ ...prev, [field]: val }));
-    playType();
   };
 
   const handleHoneypotChange = (val: string) => {
@@ -85,7 +82,6 @@ export default function ContactPage() {
   const handleSend = async () => {
     // 1. Validation check
     if (!formData.name || !formData.email || !formData.message) {
-      playClick();
       setStatus('validation_error');
       setTimeout(() => setStatus('idle'), 2500);
       return;
@@ -94,7 +90,6 @@ export default function ContactPage() {
     const emailStr = formData.email.trim();
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(emailStr)) {
-      playClick();
       setErrorMessage('Некорректный формат email!');
       setStatus('error');
       setTimeout(() => {
@@ -118,7 +113,6 @@ export default function ContactPage() {
       lowerEmail.includes('10minutemail');
 
     if (isObviousFake) {
-      playClick();
       setErrorMessage('Пожалуйста, введите реальный email!');
       setStatus('error');
       setTimeout(() => {
@@ -128,7 +122,6 @@ export default function ContactPage() {
       return;
     }
 
-    playClick();
     setStatus('loading');
 
     let currentToken = turnstileToken;
@@ -277,9 +270,9 @@ export default function ContactPage() {
   };
 
   const statusText = { 
-    idle: 'Отправить →', 
+    idle: 'Отправить', 
     loading: 'Отправляю...', 
-    success: '✓ Отправлено', 
+    success: 'Отправлено', 
     error: errorMessage || 'Ошибка! Попробуйте позже',
     validation_error: 'Заполните все поля!'
   };
@@ -288,7 +281,7 @@ export default function ContactPage() {
     <main className="min-h-screen bg-bg flex items-center justify-center py-24 px-6 relative z-10">
       <div className="w-full max-w-[600px] mx-auto select-none">
         <SectionLabel>/ 05 КОНТАКТ</SectionLabel>
-        <h2 className="font-display text-4xl text-text mt-4">Есть что обсудить?</h2>
+        <h2 className="font-display font-black text-4xl text-text mt-4">Есть что обсудить?</h2>
         <p className="font-body text-text-dim mt-3">Нужен фронтендер для сайта или приложения? Пиши!</p>
         
         <div className="mt-12 flex flex-col gap-6">
@@ -366,7 +359,6 @@ export default function ContactPage() {
           <button 
             onClick={handleSend} 
             disabled={status === 'loading' || status === 'success'}
-            onMouseEnter={playHover}
             className="mt-6 flex items-center justify-center relative h-12 overflow-hidden border border-accent bg-transparent text-accent font-mono text-sm hover:bg-[rgba(184,173,158,0.05)] transition-colors disabled:opacity-50 cursor-pointer rounded-lg"
           >
             <AnimatePresence mode="wait">
@@ -386,18 +378,16 @@ export default function ContactPage() {
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { label: 'Telegram', handle: '@Door0S', icon: <Send className="w-4 h-4 text-accent" />, url: 'https://t.me/Door0S' },
-            { label: 'GitHub', handle: 'SH20FK', icon: <Github className="w-4 h-4 text-accent" />, url: 'https://github.com/SH20FK' },
-            { label: 'Last.fm', handle: 'SH20FK', icon: <Music className="w-4 h-4 text-accent" />, url: 'https://www.last.fm/user/SH20FK' },
-            { label: 'Steam', handle: 'SH20FK', icon: <Gamepad2 className="w-4 h-4 text-accent" />, url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
+            { label: 'Telegram', handle: '@Door0S', icon: <SiTelegram className="w-4 h-4 text-accent" />, url: 'https://t.me/Door0S' },
+            { label: 'GitHub', handle: 'SH20FK', icon: <SiGithub className="w-4 h-4 text-accent" />, url: 'https://github.com/SH20FK' },
+            { label: 'Last.fm', handle: 'SH20FK', icon: <SiLastdotfm className="w-4 h-4 text-accent" />, url: 'https://www.last.fm/user/SH20FK' },
+            { label: 'Steam', handle: 'SH20FK', icon: <SiSteam className="w-4 h-4 text-accent" />, url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
           ].map(c => (
             <a 
               href={c.url} 
               target="_blank" 
               rel="noopener noreferrer" 
               referrerPolicy="no-referrer" 
-              onMouseEnter={playHover}
-              onClick={playClick}
               key={c.label} 
               className="bg-surface border border-[rgba(184,173,158,0.08)] rounded-xl px-5 py-4 flex items-center gap-4 hover:border-[rgba(184,173,158,0.2)] hover:-translate-y-0.5 transition-all text-left group cursor-pointer block duration-300"
             >

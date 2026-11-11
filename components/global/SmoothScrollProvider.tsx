@@ -22,6 +22,7 @@ export default function SmoothScrollProvider({ children }: { children: ReactNode
     });
     const setVelocity = useScrollStore.getState().setVelocity;
     let currentVelocity = 0;
+    let publishedVelocity = 0;
 
     lenis.on('scroll', (e: any) => {
       ScrollTrigger.update();
@@ -39,7 +40,11 @@ export default function SmoothScrollProvider({ children }: { children: ReactNode
       if (currentVelocity < 0.001) {
         currentVelocity = 0.0;
       }
-      setVelocity(currentVelocity);
+      // Publish only on a meaningful change so idle frames don't wake every subscriber.
+      if (Math.abs(currentVelocity - publishedVelocity) > 0.002) {
+        publishedVelocity = currentVelocity;
+        setVelocity(currentVelocity);
+      }
     };
 
     gsap.ticker.add(updateFrame);

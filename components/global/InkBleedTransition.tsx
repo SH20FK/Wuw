@@ -194,7 +194,8 @@ export function InkBleedTransition({ children }: { children: ReactNode }) {
             orthographic
             camera={{ left: -1, right: 1, top: 1, bottom: -1, near: 0, far: 1 }}
             gl={{ antialias: false, alpha: true }}
-            dpr={[1, 1.5]}
+            dpr={[1, 1]}
+            frameloop={isTransitioning ? 'always' : 'never'}
             style={{ width: '100%', height: '100%' }}
           >
             <TransitionPlane progressRef={progressRef} />

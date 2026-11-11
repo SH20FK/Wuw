@@ -1,136 +1,171 @@
 'use client';
 import { SectionLabel } from '@/components/ui/SectionLabel';
-import { TechChip } from '@/components/ui/TechChip';
-import useLastFmStore from '@/store/useLastFmStore';
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
-import Image from 'next/image';
-import { getTrackImage } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { ChelyabinskMark } from '@/components/ui/ChelyabinskMark';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 
-const stack = ['React', 'Three.js', 'GSAP', 'Next.js', 'TypeScript', 'Framer Motion', 'Zustand', 'HTML/CSS', 'Tailwind'];
-const interests = ['Minecraft Modding', 'Russian Rap', 'Anime'];
+const INTERESTS = ['Minecraft Modding', 'Russian Rap', 'Anime'];
+
+const MARQUEE = [
+  'Frontend',
+  'Three.js',
+  'GSAP',
+  'React',
+  'Next.js',
+  'TypeScript',
+  'Tailwind',
+  'Flutter',
+  'Minecraft Modding',
+];
+
+// Same noise field the rest of the site uses for its grain, scaled up into a material plate.
+const NOISE = "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")";
 
 export function About() {
-  const { nowPlaying } = useLastFmStore();
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const rightColRef = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
 
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    const ctx = gsap.context(() => {
-      gsap.fromTo(leftColRef.current, { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: sectionRef.current, start: 'top 70%' } });
-      gsap.fromTo(rightColRef.current, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, ease: 'expo.out', delay: 0.15, scrollTrigger: { trigger: sectionRef.current, start: 'top 70%' } });
-    }, sectionRef);
-    return () => ctx.revert();
-  }, []);
+  const reveal = (i: number) => ({
+    initial: reduce ? undefined : { opacity: 0, y: 26 },
+    whileInView: reduce ? undefined : { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.2 },
+    transition: { duration: 0.65, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] as const },
+  });
 
   return (
-    <section ref={sectionRef} id="about" className="w-full max-w-[1200px] mx-auto px-6 py-[clamp(6rem,12vw,10rem)]">
-      <SectionLabel>/ 02 ABOUT</SectionLabel>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-        <div ref={leftColRef} className="md:sticky md:top-24 h-fit">
-          <div className="border border-[rgba(184,173,158,0.1)] p-6 rounded-lg bg-surface">
-            <div className="font-mono text-xs text-text-muted tracking-wider mb-2">Обо мне</div>
-            <h3 className="font-display text-xl text-text leading-tight">Alexander Salamatin</h3>
-            <div className="font-mono text-sm text-accent mt-1">@SH20FK</div>
-            <div className="w-full h-px bg-[rgba(184,173,158,0.1)] my-4" />
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 font-mono text-xs text-text"><div className="w-2 h-2 rounded-full bg-green-500" />Available</div>
-              <div className="flex items-center gap-2 font-mono text-xs text-text-dim"><span className="text-text-muted">▸</span> Chelyabinsk, RU</div>
-            </div>
-            <div className="w-full h-px bg-[rgba(184,173,158,0.1)] my-4" />
-            <div className="flex items-center gap-3 min-h-[44px]">
-              {nowPlaying ? (
-                <div className="flex items-center gap-3.5 w-full">
-                  <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border border-accent/20 animate-spin bg-surface-2" style={{ animationDuration: '8s' }}>
-                    {getTrackImage(nowPlaying) ? (
-                      <Image src={getTrackImage(nowPlaying)} alt="cover" fill className="object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-full h-full bg-accent-sub" />
-                    )}
-                  </div>
-                  <div className="flex flex-col truncate flex-1 py-0.5 min-w-0">
-                    <div className="flex items-center gap-1.5 font-mono text-[9px] text-accent tracking-widest uppercase font-semibold">
-                      <span className="relative flex h-1.5 w-1.5 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent"></span>
-                      </span>
-                      Слушаю сейчас
-                    </div>
-                    <div className="font-mono text-xs text-text truncate max-w-[200px] leading-normal font-medium">{nowPlaying.name}</div>
-                    <div className="font-mono text-[9.5px] text-text-muted truncate max-w-[200px] leading-normal">{nowPlaying.artist?.['#text'] || 'Неизвестный исполнитель'}</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3.5 w-full">
-                  <div className="w-9 h-9 rounded-full bg-[rgba(184,173,158,0.05)] border border-[rgba(184,173,158,0.1)] flex items-center justify-center text-xs text-text-muted shrink-0">
-                    💤
-                  </div>
-                  <div className="flex flex-col py-0.5">
-                    <div className="font-mono text-[9px] text-text-muted tracking-widest uppercase font-semibold">Offline</div>
-                    <div className="font-mono text-xs text-text-muted leading-normal">Тишина в эфире</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+    <section id="about" className="relative w-full border-t border-[rgba(184,173,158,0.08)] py-[clamp(5rem,10vw,9rem)] overflow-hidden">
+      <div className="mx-auto w-full max-w-[1200px] px-6">
+        <SectionLabel>/ 02 ABOUT</SectionLabel>
+
+        {/* Statement — the name takes the full measure instead of hiding in a card */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-end">
+          <motion.h2
+            {...reveal(0)}
+            className="lg:col-span-8 font-display font-black uppercase text-text leading-[0.86] tracking-tight text-[clamp(2.5rem,7.5vw,5.5rem)]"
+          >
+            Александр
+            <br />
+            Саламатин
+          </motion.h2>
+
+          <motion.div {...reveal(1)} className="lg:col-span-4 flex flex-col gap-2.5 lg:pb-2">
+            <span className="font-mono text-sm text-accent">@SH20FK</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-text-muted">
+              Frontend Developer
+            </span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-text-muted">
+              Челябинск · Россия
+            </span>
+          </motion.div>
         </div>
-        <div ref={rightColRef} className="flex flex-col">
-          <p className="font-body text-base text-text-dim leading-relaxed">Привет, я Александр (SH20FK). Занимаюсь фронтендом и творческой разработкой интерфейсов. Люблю, когда всё двигается плавненько и с анимашками. Создаю сайты, приложения и игровые моды, кароче все что мне не лень будет.</p>
-          
-          <div className="mt-12 flex flex-col gap-8">
-            <div>
-              <h4 className="font-mono text-[10px] text-accent tracking-widest uppercase mb-4 font-semibold">01 / Технологический стек</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 flex flex-col justify-between">
-                  <div>
-                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">Core Web / Фронтенд</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['React', 'Next.js 14/15', 'TypeScript', 'Tailwind CSS'].map(item => <TechChip key={item}>{item}</TechChip>)}
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 flex flex-col justify-between">
-                  <div>
-                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">3D & Анимации</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Three.js', 'R3F / Fiber', 'GSAP 3', 'Framer Motion'].map(item => <TechChip key={item}>{item}</TechChip>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      </div>
 
-            <div>
-              <h4 className="font-mono text-[10px] text-accent tracking-widest uppercase mb-4 font-semibold">02 / Инструменты</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border border-[rgba(184,173,158,0.06)] bg-surface/50 hover:bg-[#181620]/30 hover:border-[rgba(184,173,158,0.12)] transition-all duration-300 col-span-1 sm:col-span-2">
-                  <span className="font-mono text-[9px] text-text-muted uppercase tracking-wider block mb-3 font-semibold">Инструменты разработки</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['Git / GitHub', 'VS Code', 'npm / pnpm'].map(item => <TechChip key={item}>{item}</TechChip>)}
-                  </div>
-                </div>
-              </div>
+      {/* Full-bleed stack strip */}
+      <div className="relative mt-12 md:mt-16 w-full border-y border-[rgba(184,173,158,0.08)] py-4 md:py-5 overflow-hidden">
+        <div className="marquee-track flex w-max">
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex items-center gap-8 md:gap-12 pr-8 md:pr-12" aria-hidden={copy === 1}>
+              {MARQUEE.map((word) => (
+                <span key={word} className="flex items-center gap-8 md:gap-12">
+                  <span className="font-display font-black uppercase text-[clamp(1.05rem,2.1vw,1.75rem)] text-text-muted whitespace-nowrap">
+                    {word}
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent/70 shrink-0" />
+                </span>
+              ))}
             </div>
+          ))}
+        </div>
+      </div>
 
+      <div className="mx-auto w-full max-w-[1200px] px-6 mt-3">
+        {/* Bento — 7/5 then 5/4/3, no empty cells */}
+        <div className="grid grid-cols-12 gap-x-3 gap-y-8 lg:gap-3">
+          {/* Bio — open editorial text on phones, card on desktop */}
+          <motion.div
+            {...reveal(2)}
+            className="col-span-12 lg:col-span-7 flex flex-col justify-between gap-8 lg:gap-10 lg:rounded-2xl lg:border lg:border-[rgba(184,173,158,0.08)] lg:bg-surface/40 lg:p-8"
+          >
+            <p className="font-body text-[17px] sm:text-lg lg:text-xl text-text-dim leading-relaxed max-w-[54ch]">
+              Привет, я Александр. Создаю сайты, приложения и игровые моды. Люблю, когда всё двигается плавно и с
+              анимашками: интерфейс должен отзываться на курсор, скролл и клавиши, а не просто лежать на экране.
+            </p>
+
+            <Link
+              href="/contact"
+              className="group self-start inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-text border-b border-[rgba(184,173,158,0.25)] pb-1.5 hover:text-accent hover:border-accent transition-colors"
+            >
+              Написать
+              <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={1.5} />
+            </Link>
+          </motion.div>
+
+          {/* Status — narrow card next to the plate on phones */}
+          <motion.div
+            {...reveal(3)}
+            className="col-span-7 lg:col-span-5 rounded-2xl border border-accent/25 bg-accent/[0.06] p-5 sm:p-6 lg:p-8 flex flex-col justify-between gap-6 lg:gap-10"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-accent">Статус</span>
             <div>
-              <h4 className="font-mono text-[10px] text-text-muted tracking-widest uppercase mb-4 font-semibold">03 / Специальные интересы</h4>
-              <div className="flex flex-wrap gap-2">
-                {interests.map(item => (
-                  <motion.div
-                    key={item}
-                    whileHover={{ scale: 1.05 }}
-                    className="font-mono text-xs text-text-dim bg-surface border border-[rgba(184,173,158,0.06)] rounded-lg px-4 py-2 hover:border-accent/15 hover:text-accent cursor-default transition-all duration-300"
-                  >
-                    {item}
-                  </motion.div>
-                ))}
+              <div className="font-display font-black uppercase text-text leading-none text-[clamp(1.5rem,3.4vw,2.75rem)]">
+                Доступен
+              </div>
+              <div className="mt-3 lg:mt-4 flex items-start gap-2.5 font-mono text-[11px] lg:text-xs text-text-dim">
+                <span className="relative flex h-2 w-2 shrink-0 mt-1 lg:mt-0.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                Открыт для проектов
               </div>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Interests — open list with a hairline on phones */}
+          <motion.div
+            {...reveal(5)}
+            className="order-4 lg:order-none col-span-12 lg:col-span-5 border-t border-[rgba(184,173,158,0.08)] pt-8 lg:border lg:rounded-2xl lg:p-8 flex flex-col justify-between gap-5 lg:gap-8"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Вне кода</span>
+            <div className="flex flex-col">
+              {INTERESTS.map((item, i) => (
+                <motion.span
+                  key={item}
+                  whileHover={reduce ? undefined : { x: 6 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+                  className="font-display font-black uppercase text-text leading-tight py-2 cursor-default transition-colors duration-300 hover:text-accent text-[clamp(1.3rem,4.2vw,1.5rem)]"
+                >
+                  <span className="font-mono text-[10px] text-text-muted mr-3 align-middle">0{i + 1}</span>
+                  {item}
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Material plate — sits beside the status card on phones */}
+          <motion.div
+            {...reveal(6)}
+            className="order-3 lg:order-none col-span-5 lg:col-span-7 relative overflow-hidden rounded-2xl border border-[rgba(184,173,158,0.08)] min-h-[150px] lg:min-h-[180px]"
+          >
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{ background: 'radial-gradient(120% 95% at 12% 108%, var(--color-accent), transparent 72%)' }}
+            />
+            <div
+              className="absolute inset-0 opacity-[0.22] mix-blend-overlay pointer-events-none"
+              style={{ backgroundImage: NOISE }}
+            />
+            <ChelyabinskMark className="pointer-events-none absolute -right-2 bottom-0 hidden h-[118%] w-auto text-accent sm:block lg:right-2" />
+            <div className="relative z-10 h-full p-4 sm:p-5 lg:p-6 flex flex-col justify-between gap-5 lg:gap-8">
+              <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-text-muted">Координаты</span>
+              <div className="flex flex-col gap-2.5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+                <div className="flex flex-col gap-1">
+                  <span className="font-mono text-[11px] lg:text-xs text-text">55.16° N</span>
+                  <span className="font-mono text-[11px] lg:text-xs text-text">61.43° E</span>
+                </div>
+                <span className="font-mono text-[9px] lg:text-[10px] text-text-muted lg:text-right">GMT+5<br />Челябинск</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -1,8 +1,0 @@
-{
-  "name": "Alexander Salamatin Portfolio",
-  "description": "Interactive WebGL and 3D portfolio of frontend developer Alexander Salamatin (SH20FK)",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}

@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { spring } from '@/lib/animations';
-import { useSfx } from '@/lib/useSfx';
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -13,7 +12,6 @@ interface ButtonProps {
 }
 
 export function Button({ children, variant = 'filled', href, onClick, className = '' }: ButtonProps) {
-  const { playHover, playClick } = useSfx();
   const baseClasses = "relative inline-flex items-center justify-center font-mono text-sm px-6 py-3 cursor-pointer overflow-hidden group";
   const variants = {
     filled: "bg-accent text-bg",
@@ -31,27 +29,13 @@ export function Button({ children, variant = 'filled', href, onClick, className 
     </>
   );
 
-  const handleOnClick = () => {
-    playClick();
-    onClick?.();
-  };
-
   if (href) return (
-    <Link 
-      href={href} 
-      onMouseEnter={playHover} 
-      onClick={handleOnClick} 
-      className={`${baseClasses} ${variants[variant]} ${className}`}
-    >
+    <Link href={href} onClick={onClick} className={`${baseClasses} ${variants[variant]} ${className}`}>
       {inner}
     </Link>
   );
   return (
-    <button 
-      onMouseEnter={playHover} 
-      onClick={handleOnClick} 
-      className={`${baseClasses} ${variants[variant]} ${className}`}
-    >
+    <button onClick={onClick} className={`${baseClasses} ${variants[variant]} ${className}`}>
       {inner}
     </button>
   );

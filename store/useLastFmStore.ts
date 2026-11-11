@@ -1,5 +1,16 @@
 import { create } from 'zustand';
 
+const ACCENT_KEY = 'SH20FK_accent';
+
+function readStoredAccent(): string {
+  if (typeof window === 'undefined') return '#D97757';
+  try {
+    return window.localStorage.getItem(ACCENT_KEY) || '#D97757';
+  } catch {
+    return '#D97757';
+  }
+}
+
 interface LastFmState {
   grainIntensity: number;
   grainSpeed: number;
@@ -8,17 +19,7 @@ interface LastFmState {
   setNowPlaying: (track: any | null) => void;
   accentColor: string;
   setAccentColor: (color: string) => void;
-  soundEnabled: boolean;
-  toggleSound: () => void;
 }
-
-const getInitialSoundEnabled = () => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('SH20FK_sound_enabled');
-    return saved !== 'false';
-  }
-  return true;
-};
 
 const useLastFmStore = create<LastFmState>((set) => ({
   grainIntensity: 0.035,
@@ -26,16 +27,17 @@ const useLastFmStore = create<LastFmState>((set) => ({
   setGrain: (intensity, speed) => set({ grainIntensity: intensity, grainSpeed: speed }),
   nowPlaying: null,
   setNowPlaying: (track) => set({ nowPlaying: track }),
-  accentColor: '#D97757',
-  setAccentColor: (color) => set({ accentColor: color }),
-  soundEnabled: getInitialSoundEnabled(),
-  toggleSound: () => set((state) => {
-    const next = !state.soundEnabled;
+  // Restored from storage so the theme survives reloads and route changes
+  // instead of flashing back to the brand colour.
+  accentColor: readStoredAccent(),
+  setAccentColor: (color) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('SH20FK_sound_enabled', String(next));
+      try {
+        window.localStorage.setItem(ACCENT_KEY, color);
+      } catch {}
     }
-    return { soundEnabled: next };
-  }),
+    set({ accentColor: color });
+  },
 }));
 
 export default useLastFmStore;

@@ -14,6 +14,90 @@
   initial-value: rgba(217, 119, 87, 0.08);
 }
 
+@keyframes marquee-x {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+.marquee-track {
+  animation: marquee-x 38s linear infinite;
+  will-change: transform;
+}
+
+/* Now-playing equalizer: CSS instead of a JS animation loop that never sleeps */
+@keyframes eq-bar {
+  0%, 100% { transform: scaleY(0.2); }
+  50% { transform: scaleY(1); }
+}
+
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq-bar 0.7s ease-in-out infinite;
+}
+
+/* Accent change: a ring of the new colour sweeps in from the bottom-right.
+   Pure transform + opacity, so it stays on the compositor. */
+@keyframes accent-splash {
+  0%   { transform: translate(50%, 50%) scale(0.02); opacity: 0.95; }
+  65%  { opacity: 0.6; }
+  100% { transform: translate(50%, 50%) scale(1); opacity: 0; }
+}
+
+.accent-splash {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 170vmax;
+  height: 170vmax;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 95;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  transform: translate(50%, 50%) scale(0.02);
+  animation: accent-splash 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Music page spectrum: 14 CSS bars instead of a 14-write-per-frame JS loop */
+@keyframes spectrum-bar {
+  0%, 100% { transform: scaleY(0.18); }
+  50% { transform: scaleY(1); }
+}
+
+.spectrum-bar {
+  animation: spectrum-bar 0.9s ease-in-out infinite;
+}
+
+@keyframes grain-shift {
+  0%   { transform: translate3d(0, 0, 0); }
+  25%  { transform: translate3d(-3%, -2%, 0); }
+  50%  { transform: translate3d(2%, -4%, 0); }
+  75%  { transform: translate3d(-2%, 3%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/* Film grain as a composited CSS layer instead of a per-frame WebGL shader.
+   inset:-6% keeps the edges covered while the layer drifts in steps. */
+.grain-layer {
+  position: fixed;
+  inset: -6%;
+  z-index: 100;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  opacity: 0.035;
+  will-change: transform;
+  animation: grain-shift 1.4s steps(6) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain-layer { animation: none; }
+  .marquee-track { animation: none; }
+  .eq-bar { animation: none; transform: scaleY(0.5); }
+  .spectrum-bar { animation: none; transform: scaleY(0.35); }
+  .accent-splash { display: none; }
+}
+
 @layer base {
   :root {
     --color-bg: #0E0C0F;
@@ -22,6 +106,8 @@
     --color-accent: #D97757;
     --color-accent-sub: #857868;
     --color-accent-glow: rgba(217, 119, 87, 0.08);
+    --accent-rgb: 217 119 87;
+    --accent-sub-rgb: 133 120 104;
     --color-text: #EAE5DC;
     --color-text-muted: #5A5664;
     --color-text-dim: #8A8590;

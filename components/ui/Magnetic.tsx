@@ -1,13 +1,11 @@
 'use client';
 import { useRef, MouseEvent } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useSfx } from '@/lib/useSfx';
 
 export function Magnetic({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const { playHover } = useSfx();
 
   const springConfig = { type: 'spring' as const, stiffness: 140, damping: 12, mass: 0.15 };
   const smoothX = useSpring(x, springConfig);
@@ -17,7 +15,6 @@ export function Magnetic({ children }: { children: React.ReactNode }) {
   const rectRef = useRef<{ centerX: number; centerY: number } | null>(null);
 
   const handleMouseEnter = () => {
-    playHover();
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       rectRef.current = {
@@ -29,27 +26,24 @@ export function Magnetic({ children }: { children: React.ReactNode }) {
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!rectRef.current) return;
-    const { clientX, clientY } = e;
     const { centerX, centerY } = rectRef.current;
-    const distanceX = clientX - centerX;
-    const distanceY = clientY - centerY;
-    
-    // Smooth pull multiplier
-    x.set(distanceX * 0.35);
-    y.set(distanceY * 0.35);
+    const distX = e.clientX - centerX;
+    const distY = e.clientY - centerY;
+    x.set(distX * 0.12);
+    y.set(distY * 0.12);
   };
 
   const handleMouseLeave = () => {
+    rectRef.current = null;
     x.set(0);
     y.set(0);
-    rectRef.current = null;
   };
 
   return (
     <motion.div
       ref={ref}
-      onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ x: smoothX, y: smoothY }}
       className="inline-block"

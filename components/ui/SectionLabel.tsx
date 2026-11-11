@@ -6,39 +6,43 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
   const labelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let active = true;
-    let currentSkew = 0;
-    let currentSpacing = 0;
-    let currentWeight = 300;
+    const el = labelRef.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const updateKinetic = () => {
-      if (!active) return;
-      const targetVelocity = useScrollStore.getState().velocity;
-      
-      // Lerp decay logic
-      currentSkew += (targetVelocity * -0.04 - currentSkew) * 0.12;
-      currentSpacing += (Math.abs(targetVelocity) * 0.05 - currentSpacing) * 0.12;
-      currentWeight += ((300 + Math.abs(targetVelocity) * 1.2) - currentWeight) * 0.12;
+    // Transform-only skew. Animating font-weight/letter-spacing here re-shaped
+    // the text on every frame and forced a layout pass while scrolling.
+    let raf = 0;
+    let skew = 0;
 
-      if (labelRef.current) {
-        labelRef.current.style.transform = `skewX(${Math.max(-12, Math.min(12, currentSkew))}deg)`;
-        labelRef.current.style.letterSpacing = `${Math.max(0, Math.min(15, currentSpacing))}px`;
-        labelRef.current.style.fontWeight = `${Math.max(100, Math.min(600, Math.round(currentWeight)))}`;
+    const tick = () => {
+      const velocity = useScrollStore.getState().velocity;
+      const target = Math.max(-10, Math.min(10, velocity * -6));
+      skew += (target - skew) * 0.14;
+      el.style.transform = `skewX(${skew.toFixed(2)}deg)`;
+
+      if (Math.abs(velocity) < 0.001 && Math.abs(skew) < 0.02) {
+        el.style.transform = '';
+        raf = 0;
+        return;
       }
-
-      requestAnimationFrame(updateKinetic);
+      raf = requestAnimationFrame(tick);
     };
 
-    updateKinetic();
+    const unsubscribe = useScrollStore.subscribe(() => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    });
+
     return () => {
-      active = false;
+      unsubscribe();
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
-    <div 
-      ref={labelRef} 
-      className="font-mono text-xs text-accent tracking-wider uppercase mb-8 inline-block transition-all duration-300 origin-left ease-out"
+    <div
+      ref={labelRef}
+      className="font-mono text-xs text-accent tracking-wider uppercase mb-8 inline-block origin-left"
     >
       {children}
     </div>

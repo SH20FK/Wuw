@@ -30,12 +30,12 @@ export function useLastFm() {
         const isPlaying = track['@attr']?.nowplaying === 'true';
         
         const coverUrl = getTrackImage(track);
-        if (isPlaying && coverUrl) {
+        if (coverUrl) {
+          // Colour follows the cover whether or not playback is active, so the
+          // theme survives a pause instead of snapping back to the brand accent.
           getAverageColor(coverUrl).then((color) => {
             setAccentColor(color);
-          }).catch(() => {
-            setAccentColor('#D97757');
-          });
+          }).catch(() => {});
 
           const artist = track.artist['#text']?.toLowerCase() || '';
           const isHeavy = ['mzlff', 'слава кпсс', 'pyrokinesis', 'shadowraze'].some(a => artist.includes(a));
@@ -45,11 +45,12 @@ export function useLastFm() {
             gsap.to(grainUniforms, { uIntensity: 0.045, uSpeed: 1.0, duration: 2, onUpdate: updateGrainStore });
           }
         } else {
-          setAccentColor('#D97757'); 
-          gsap.to(grainUniforms, { uIntensity: 0.025, uSpeed: 0.3, duration: 3, onUpdate: updateGrainStore });
+          // No cover to sample: keep the theme that is already stored instead of
+          // resetting the whole site to the brand colour.
+          gsap.to(grainUniforms, { uIntensity: isPlaying ? 0.025 : 0.02, uSpeed: 0.3, duration: 3, onUpdate: updateGrainStore });
         }
       } catch (err) {
-        setAccentColor('#D97757');
+        // Network hiccup: keep whatever theme is already stored.
       }
     }
 

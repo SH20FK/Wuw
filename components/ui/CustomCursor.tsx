@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 export function CustomCursor() {
@@ -14,47 +14,61 @@ export function CustomCursor() {
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
 
+  const visibleRef = useRef(false);
+  const hoveredRef = useRef(false);
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       cursorX.set(e.clientX - 12);
       cursorY.set(e.clientY - 12);
-      const isOutside = e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight;
-      setIsVisible(!isOutside);
+      const inside =
+        e.clientX > 0 &&
+        e.clientY > 0 &&
+        e.clientX < window.innerWidth &&
+        e.clientY < window.innerHeight;
+      if (inside !== visibleRef.current) {
+        visibleRef.current = inside;
+        setIsVisible(inside);
+      }
     };
 
     const handleMouseDown = () => setIsActive(true);
     const handleMouseUp = () => setIsActive(false);
 
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target) return;
-      const isInteractive = 
-        target.closest('a') || 
-        target.closest('button') || 
-        target.closest('input') || 
-        target.closest('textarea') || 
-        target.dataset.cursor === 'hover' ||
-        target.closest('[role="button"]') ||
-        target.classList.contains('cursor-pointer');
-      
-      setIsHovered(!!isInteractive);
+    // One `closest()` walk against a combined selector instead of six queries per mouseover.
+    const handlePointerOver = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      const interactive = !!(
+        target &&
+        target.closest('a,button,input,textarea,select,[role="button"],.cursor-pointer,[data-cursor="hover"]')
+      );
+      if (interactive !== hoveredRef.current) {
+        hoveredRef.current = interactive;
+        setIsHovered(interactive);
+      }
     };
 
-    const handleMouseLeaveWindow = () => setIsVisible(false);
-    const handleMouseEnterWindow = () => setIsVisible(true);
+    const handleMouseLeaveWindow = () => {
+      visibleRef.current = false;
+      setIsVisible(false);
+    };
+    const handleMouseEnterWindow = () => {
+      visibleRef.current = true;
+      setIsVisible(true);
+    };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('pointerover', handlePointerOver, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeaveWindow);
     document.addEventListener('mouseenter', handleMouseEnterWindow);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('pointerover', handlePointerOver);
       document.removeEventListener('mouseleave', handleMouseLeaveWindow);
       document.removeEventListener('mouseenter', handleMouseEnterWindow);
     };

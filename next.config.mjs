@@ -18,6 +18,10 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.last.fm' },
       { protocol: 'https', hostname: 'assets.last.fm' },
       { protocol: 'https', hostname: 'i.scdn.co' },
+      { protocol: 'https', hostname: 'images.genius.com' },
+      { protocol: 'https', hostname: '*.mzstatic.com' },
+      { protocol: 'https', hostname: 'cdn-images.deezer.com' },
+      { protocol: 'https', hostname: '*.dzcdn.net' },
       { protocol: 'https', hostname: 'coverartarchive.org' },
       { protocol: 'https', hostname: 'i.ibb.co' },
       { protocol: 'https', hostname: 'picsum.photos' }
