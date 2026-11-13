@@ -2,12 +2,32 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { spring, stagger } from '@/lib/animations';
-import { Button } from '@/components/ui/Button';
 import { Magnetic } from '@/components/ui/Magnetic';
+import { ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import useScrollStore from '@/store/useScrollStore';
 
 const HeroCanvas = dynamic(() => import('@/components/three/HeroCanvas'), { ssr: false });
+
+/**
+ * Section entry link: label + arrow capsule.
+ * On hover the capsule fills with the accent, the arrow turns 45° and the word takes the accent.
+ */
+function SectionLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Magnetic>
+      <Link href={href} className="group flex items-center gap-3.5 py-1">
+        <span className="font-display text-[1.2rem] sm:text-[1.4rem] font-black uppercase leading-none tracking-tight text-text transition-colors duration-300 group-hover:text-accent">
+          {label}
+        </span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,173,158,0.25)] text-text-muted transition-all duration-500 group-hover:border-accent group-hover:bg-accent group-hover:text-bg">
+          <ArrowUpRight className="h-4 w-4 transition-transform duration-500 group-hover:rotate-45" strokeWidth={1.5} />
+        </span>
+      </Link>
+    </Magnetic>
+  );
+}
 
 function isWebGLAvailable() {
   if (typeof window === 'undefined') return false;
@@ -106,14 +126,10 @@ export function Hero() {
 
             <motion.div
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { ...spring.default, delay: 0.7 } } }}
-              className="flex items-center gap-4 mt-12 flex-wrap"
+              className="flex flex-wrap items-center gap-x-10 gap-y-5 mt-12"
             >
-              <Magnetic>
-                <Button variant="filled" href="/work">Работы</Button>
-              </Magnetic>
-              <Magnetic>
-                <Button variant="outlined" href="/music">Музыка</Button>
-              </Magnetic>
+              <SectionLink href="/work" label="Работы" />
+              <SectionLink href="/music" label="Музыка" />
             </motion.div>
           </motion.div>
 

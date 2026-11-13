@@ -5,43 +5,49 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getTrackImage(track: any): string {
-  if (!track) return '';
+const PLACEHOLDER_COVER_MARKERS = [
+  '2a96cbd30df375e2f75a98af74f1ed0a',
+  '2a96cbd8b46e442fc41c2b86b821562f',
+  'default_image',
+  'lastfm_avatar',
+  'noimage',
+  'no-image',
+  'placeholder',
+];
 
-  // High-fidelity client-side override guarantees for designated tracks to ensure premium catalog loading
-  const trackName = (track.name || '').toLowerCase();
-  const artistName = (track.artist?.['#text'] || track.artist?.name || '').toLowerCase();
-
-  if ((artistName.includes('noize mc') || artistName.includes('нойз мс')) && (trackName.includes('сам') || trackName.includes('sam'))) {
-    return 'https://images.genius.com/bbaa0e29b1beaa9fa88afccb4e1957de.1000x1000x1.jpg';
-  }
-  if ((artistName.includes('mzlff') || artistName.includes('мэзлфф')) && (trackName.includes('уходи') || trackName.includes('uhodi'))) {
-    return 'https://images.genius.com/f9c87ca5796245d8b85ccad0b6e9a089.1000x1000x1.jpg';
-  }
-
-  if (!track.image || !Array.isArray(track.image) || track.image.length === 0) return '';
-  for (let i = track.image.length - 1; i >= 0; i--) {
-    const imgObj = track.image[i];
-    if (imgObj && imgObj['#text']) {
-      const url = imgObj['#text'];
-      // Skip Last.fm standard placeholder star hashes and general default image paths
-      if (
-        url.includes('2a96cbd30df375e2f75a98af74f1ed0a') ||
-        url.includes('2a96cbd8b46e442fc41c2b86b821562f') ||
-        url.includes('default_image') ||
-        url.includes('lastfm_avatar') ||
-        url === ''
-      ) {
-        continue;
-      }
-      return url;
-    }
-  }
-  
-  // Fall back to original image if we filtered everything out but have a url
-  const fallbackImg = track.image[track.image.length - 1]?.['#text'] || '';
-  return fallbackImg;
+/** true, если URL — это заглушка Last.fm, а не настоящая обложка. */
+export function isPlaceholderCover(url?: string | null): boolean {
+  if (!url) return true;
+  const value = url.toLowerCase();
+  return PLACEHOLDER_COVER_MARKERS.some((marker) => value.includes(marker));
 }
+
+/** Последний (самый крупный) настоящий URL из массива image, иначе пустая строка. */
+function largestRealImage(track: any): string {
+  if (!track?.image) return '';
+  const list = Array.isArray(track.image) ? track.image : [track.image];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const url = list[i]?.['#text'];
+    if (url && !isPlaceholderCover(url)) return url;
+  }
+  return '';
+}
+
+/**
+ * Обложка трека. Заглушки Last.fm (звёздочка и default-картинки) не возвращаются
+ * никогда: лучше пустая строка и нарисованный плейсхолдер, чем пять одинаковых
+ * звёздочек в списке. Реальные обложки подставляет /api/lastfm.
+ */
+export function getTrackImage(track: any): string {
+  return largestRealImage(track);
+}
+
+/** Фото артиста — та же логика, что для обложек. */
+export function getArtistImage(artist: any): string {
+  return largestRealImage(artist);
+}
+
+
 
 function computeAverageColor(imgUrl: string): Promise<string> {
   return new Promise((resolve) => {
@@ -50,8 +56,9 @@ function computeAverageColor(imgUrl: string): Promise<string> {
     }
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    // Use local proxy to completely avoid CORS issues on client-side Image/Canvas loading
-    img.src = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+    // Локальный прокси снимает CORS и заодно отдаёт картинку 64×64: для
+    // усреднения цвета больше не нужно, а трафика уходит в разы меньше.
+    img.src = `/api/proxy-image?w=64&url=${encodeURIComponent(imgUrl)}`;
     
     img.onload = () => {
       const canvas = document.createElement('canvas');

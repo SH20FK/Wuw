@@ -68,6 +68,30 @@
   animation: spectrum-bar 0.9s ease-in-out infinite;
 }
 
+/* Stand inputs: one hairline, no box */
+.v-inp {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(184, 173, 158, 0.18);
+  border-radius: 0;
+  padding: 0 0 0.7rem;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.v-inp::placeholder {
+  color: var(--color-text-muted);
+}
+
+.v-inp:focus {
+  border-color: var(--color-accent);
+}
+
 @keyframes grain-shift {
   0%   { transform: translate3d(0, 0, 0); }
   25%  { transform: translate3d(-3%, -2%, 0); }
@@ -90,12 +114,25 @@
   animation: grain-shift 1.4s steps(6) infinite;
 }
 
+/* Тихий переход между страницами: новый контент проявляется в пределах 220 мс.
+   Только opacity — без transform и без canvas, чтобы не ловить CLS и не тянуть
+   three.js на каждый маршрут. */
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.page-fade {
+  animation: page-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .grain-layer { animation: none; }
   .marquee-track { animation: none; }
   .eq-bar { animation: none; transform: scaleY(0.5); }
   .spectrum-bar { animation: none; transform: scaleY(0.35); }
   .accent-splash { display: none; }
+  .page-fade { animation: none; }
 }
 
 @layer base {
@@ -109,8 +146,11 @@
     --accent-rgb: 217 119 87;
     --accent-sub-rgb: 133 120 104;
     --color-text: #EAE5DC;
-    --color-text-muted: #5A5664;
-    --color-text-dim: #8A8590;
+    /* #5A5664 давал 2.7:1 на фоне — ниже порога 4.5:1 для мелкого текста.
+       Подняли до минимального значения, которое проходит и на bg, и на surface;
+       dim заодно чуть светлее, чтобы два уровня серого не слиплись. */
+    --color-text-muted: #83808C;
+    --color-text-dim: #9C97A3;
 
     --radius-sm: 6px;
     --radius-md: 12px;

@@ -19,9 +19,6 @@ const MARQUEE = [
   'Minecraft Modding',
 ];
 
-// Same noise field the rest of the site uses for its grain, scaled up into a material plate.
-const NOISE = "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")";
-
 export function About() {
   const reduce = useReducedMotion();
 
@@ -35,7 +32,7 @@ export function About() {
   return (
     <section id="about" className="relative w-full border-t border-[rgba(184,173,158,0.08)] py-[clamp(5rem,10vw,9rem)] overflow-hidden">
       <div className="mx-auto w-full max-w-[1200px] px-6">
-        <SectionLabel>/ 02 ABOUT</SectionLabel>
+        <SectionLabel>/ ABOUT</SectionLabel>
 
         {/* Statement — the name takes the full measure instead of hiding in a card */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-end">
@@ -150,19 +147,12 @@ export function About() {
               className="absolute inset-0 opacity-40"
               style={{ background: 'radial-gradient(120% 95% at 12% 108%, var(--color-accent), transparent 72%)' }}
             />
-            <div
-              className="absolute inset-0 opacity-[0.22] mix-blend-overlay pointer-events-none"
-              style={{ backgroundImage: NOISE }}
-            />
             <ChelyabinskMark className="pointer-events-none absolute -right-2 bottom-0 hidden h-[118%] w-auto text-accent sm:block lg:right-2" />
             <div className="relative z-10 h-full p-4 sm:p-5 lg:p-6 flex flex-col justify-between gap-5 lg:gap-8">
               <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-text-muted">Координаты</span>
-              <div className="flex flex-col gap-2.5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
-                <div className="flex flex-col gap-1">
-                  <span className="font-mono text-[11px] lg:text-xs text-text">55.16° N</span>
-                  <span className="font-mono text-[11px] lg:text-xs text-text">61.43° E</span>
-                </div>
-                <span className="font-mono text-[9px] lg:text-[10px] text-text-muted lg:text-right">GMT+5<br />Челябинск</span>
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[11px] lg:text-xs text-text">55.16° N</span>
+                <span className="font-mono text-[11px] lg:text-xs text-text">61.43° E</span>
               </div>
             </div>
           </motion.div>

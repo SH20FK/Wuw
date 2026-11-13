@@ -1,12 +1,28 @@
 ﻿'use client';
-import { SectionLabel } from '@/components/ui/SectionLabel';
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { spring } from '@/lib/animations';
+
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import { SiTelegram, SiGithub, SiLastdotfm, SiSteam } from 'react-icons/si';
+import type { IconType } from 'react-icons';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { Turnstile } from '@marsidev/react-turnstile';
 
-async function solveChallenge(challenge: { timestamp: number; randomValue: string; signature: string; difficulty: number }) {
+const CHANNELS: { label: string; handle: string; href: string; Icon: IconType }[] = [
+  { label: 'Telegram', handle: '@Door0S', href: 'https://t.me/Door0S', Icon: SiTelegram },
+  { label: 'GitHub', handle: 'SH20FK', href: 'https://github.com/SH20FK', Icon: SiGithub },
+  { label: 'Last.fm', handle: 'SH20FK', href: 'https://www.last.fm/user/SH20FK', Icon: SiLastdotfm },
+  { label: 'Steam', handle: 'SH20FK', href: 'https://steamcommunity.com/search/users/#text=SH20FK', Icon: SiSteam },
+];
+
+type Challenge = {
+  timestamp: number;
+  randomValue: string;
+  signature: string;
+  difficulty: number;
+  honeypotField?: string;
+};
+
+async function solveChallenge(challenge: Challenge) {
   const { timestamp, randomValue, signature, difficulty } = challenge;
   const salt = `${timestamp}-${randomValue}-${signature}`;
   const prefix = '0'.repeat(difficulty);
@@ -17,15 +33,15 @@ async function solveChallenge(challenge: { timestamp: number; randomValue: strin
     const data = encoder.encode(salt + nonce);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
     if (hashHex.startsWith(prefix)) {
       return nonce;
     }
     nonce++;
     if (nonce % 500 === 0) {
-      // Yield execution to the browser to prevent freezing the UI
-      await new Promise(resolve => setTimeout(resolve, 0));
+      // Yield to the browser so the UI never freezes while the nonce is mined.
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }
 }
@@ -34,7 +50,7 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [honeypotValue, setHoneypotValue] = useState('');
   const [honeypotFieldName, setHoneypotFieldName] = useState('website');
-  const [challenge, setChallenge] = useState<any>(null);
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'validation_error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -43,24 +59,18 @@ export default function ContactPage() {
   const turnstileResolveRef = useRef<((token: string) => void) | null>(null);
 
   useEffect(() => {
-    // Fetch Turnstile config dynamically
     fetch('/api/turnstile-config')
-      .then(res => res.json())
-      .then(data => {
-        if (data.siteKey) {
-          setSiteKey(data.siteKey);
-        } else {
-          setSiteKey('1x00000000000000000000AA');
-        }
+      .then((res) => res.json())
+      .then((data) => {
+        setSiteKey(data.siteKey || '1x00000000000000000000AA');
       })
       .catch(() => {
         setSiteKey('1x00000000000000000000AA');
       });
 
-    // Fetch dynamic security challenge & dynamic honeypot field name on mount
     fetch('/api/contact')
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setChallenge(data);
         if (data.honeypotField) {
           setHoneypotFieldName(data.honeypotField);
@@ -71,19 +81,30 @@ export default function ContactPage() {
       });
   }, []);
 
-  const handleInputChange = (field: 'name' | 'email' | 'message', val: string) => {
-    setFormData(prev => ({ ...prev, [field]: val }));
+  const handleInputChange = (field: 'name' | 'email' | 'message', value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (status === 'error' || status === 'validation_error') {
+      setStatus('idle');
+      setErrorMessage('');
+    }
   };
 
-  const handleHoneypotChange = (val: string) => {
-    setHoneypotValue(val);
+  const refreshChallenge = () => {
+    fetch('/api/contact')
+      .then((res) => res.json())
+      .then((data) => {
+        setChallenge(data);
+        if (data.honeypotField) {
+          setHoneypotFieldName(data.honeypotField);
+        }
+      })
+      .catch((err) => console.warn(err));
   };
 
   const handleSend = async () => {
-    // 1. Validation check
     if (!formData.name || !formData.email || !formData.message) {
       setStatus('validation_error');
-      setTimeout(() => setStatus('idle'), 2500);
+      window.setTimeout(() => setStatus('idle'), 2500);
       return;
     }
 
@@ -92,18 +113,17 @@ export default function ContactPage() {
     if (!emailRegex.test(emailStr)) {
       setErrorMessage('Некорректный формат email!');
       setStatus('error');
-      setTimeout(() => {
+      window.setTimeout(() => {
         setStatus('idle');
         setErrorMessage('');
       }, 2500);
       return;
     }
 
-    // Block obvious dummy emails
     const lowerEmail = emailStr.toLowerCase();
-    const isObviousFake = 
-      lowerEmail.startsWith('test@') || 
-      lowerEmail.startsWith('admin@') || 
+    const isObviousFake =
+      lowerEmail.startsWith('test@') ||
+      lowerEmail.startsWith('admin@') ||
       lowerEmail === 'asdf@asdf.com' ||
       lowerEmail === 'test@test.com' ||
       lowerEmail === '1@1.com' ||
@@ -115,7 +135,7 @@ export default function ContactPage() {
     if (isObviousFake) {
       setErrorMessage('Пожалуйста, введите реальный email!');
       setStatus('error');
-      setTimeout(() => {
+      window.setTimeout(() => {
         setStatus('idle');
         setErrorMessage('');
       }, 2500);
@@ -130,31 +150,29 @@ export default function ContactPage() {
         if (turnstileRef.current) {
           const tokenPromise = new Promise<string>((resolve, reject) => {
             turnstileResolveRef.current = resolve;
-            
-            // set a timeout of 10 seconds to prevent hanging
-            const timeoutId = setTimeout(() => {
+
+            const timeoutId = window.setTimeout(() => {
               if (turnstileResolveRef.current === resolve) {
                 turnstileResolveRef.current = null;
-                reject(new Error('Время ожидания проверки Cloudflare истекло. Пожалуйста, попробуйте еще раз.'));
+                reject(new Error('Время ожидания проверки Cloudflare истекло. Попробуйте ещё раз.'));
               }
             }, 10000);
-            
-            // Trigger programmatic execution of the invisible Turnstile widget
+
             try {
               turnstileRef.current.execute();
             } catch (err) {
-              clearTimeout(timeoutId);
+              window.clearTimeout(timeoutId);
               reject(err);
             }
           });
           currentToken = await tokenPromise;
         } else {
-          throw new Error('Система проверки Cloudflare еще не готова. Попробуйте снова через секунду.');
+          throw new Error('Система проверки Cloudflare ещё не готова. Попробуйте через секунду.');
         }
       } catch (err: any) {
         setErrorMessage(err.message || 'Ошибка безопасности Cloudflare.');
         setStatus('error');
-        setTimeout(() => {
+        window.setTimeout(() => {
           setStatus('idle');
           setErrorMessage('');
         }, 3500);
@@ -163,33 +181,28 @@ export default function ContactPage() {
     }
 
     try {
-      // 2. Use pre-fetched challenge or retrieve one if not loaded yet
       let currentChallenge = challenge;
       if (!currentChallenge) {
         const challengeRes = await fetch('/api/contact');
         if (!challengeRes.ok) {
           throw new Error('Failed to retrieve security token');
         }
-        currentChallenge = await challengeRes.json();
+        currentChallenge = (await challengeRes.json()) as Challenge;
       }
 
-      // 3. Solve Cryptographic Proof-of-Work locally in browser (invisible CAPTCHA)
       const nonce = await solveChallenge(currentChallenge);
 
-      // 4. Send submission payload along with solved challenge & Cloudflare Turnstile token
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           [honeypotFieldName]: honeypotValue,
           turnstileToken: currentToken,
           challenge: {
             ...currentChallenge,
-            nonce
-          }
+            nonce,
+          },
         }),
       });
 
@@ -199,25 +212,14 @@ export default function ContactPage() {
         if (turnstileRef.current) {
           turnstileRef.current.reset();
         }
-        
-        // Pre-fetch a fresh challenge for any subsequent submissions
-        fetch('/api/contact')
-          .then(res => res.json())
-          .then(data => {
-            setChallenge(data);
-            if (data.honeypotField) {
-              setHoneypotFieldName(data.honeypotField);
-            }
-          })
-          .catch((err) => console.warn(err));
 
-        setTimeout(() => {
+        refreshChallenge();
+        window.setTimeout(() => {
           setStatus('idle');
           setFormData({ name: '', email: '', message: '' });
           setHoneypotValue('');
         }, 3000);
       } else {
-        console.error('Contact submission error');
         const data = await response.json().catch(() => ({}));
         setErrorMessage(data.error || 'Ошибка! Попробуйте позже');
         setStatus('error');
@@ -226,24 +228,14 @@ export default function ContactPage() {
           turnstileRef.current.reset();
         }
 
-        // Pre-fetch a fresh challenge on error
-        fetch('/api/contact')
-          .then(res => res.json())
-          .then(data => {
-            setChallenge(data);
-            if (data.honeypotField) {
-              setHoneypotFieldName(data.honeypotField);
-            }
-          })
-          .catch((err) => console.warn(err));
-
-        setTimeout(() => {
+        refreshChallenge();
+        window.setTimeout(() => {
           setStatus('idle');
           setErrorMessage('');
         }, 4500);
       }
-    } catch (e) {
-      console.error('Contact submission request failed:', e);
+    } catch (err) {
+      console.error('Contact submission request failed:', err);
       setStatus('error');
       setErrorMessage('Сбой соединения');
       setTurnstileToken(null);
@@ -251,82 +243,102 @@ export default function ContactPage() {
         turnstileRef.current.reset();
       }
 
-      // Pre-fetch a fresh challenge on error
-      fetch('/api/contact')
-        .then(res => res.json())
-        .then(data => {
-          setChallenge(data);
-          if (data.honeypotField) {
-            setHoneypotFieldName(data.honeypotField);
-          }
-        })
-        .catch((err) => console.warn(err));
-
-      setTimeout(() => {
+      refreshChallenge();
+      window.setTimeout(() => {
         setStatus('idle');
         setErrorMessage('');
       }, 4500);
     }
   };
 
-  const statusText = { 
-    idle: 'Отправить', 
-    loading: 'Отправляю...', 
-    success: 'Отправлено', 
-    error: errorMessage || 'Ошибка! Попробуйте позже',
-    validation_error: 'Заполните все поля!'
-  };
+  const buttonLabel =
+    status === 'loading' ? 'Отправляю…' : status === 'success' ? 'Отправлено' : 'Отправить';
+
+  const liveMessage =
+    status === 'loading'
+      ? 'Проверяю и отправляю…'
+      : status === 'success'
+        ? 'Готово. Отвечу в течение дня.'
+        : status === 'validation_error'
+          ? 'Заполни имя, email и сообщение.'
+          : status === 'error'
+            ? errorMessage
+            : '';
 
   return (
-    <main className="min-h-screen bg-bg flex items-center justify-center py-24 px-6 relative z-10">
-      <div className="w-full max-w-[600px] mx-auto select-none">
-        <SectionLabel>/ 05 КОНТАКТ</SectionLabel>
-        <h2 className="font-display font-black text-4xl text-text mt-4">Есть что обсудить?</h2>
-        <p className="font-body text-text-dim mt-3">Нужен фронтендер для сайта или приложения? Пиши!</p>
-        
-        <div className="mt-12 flex flex-col gap-6">
-          <div className="flex flex-col">
-            <input 
-              type="text" 
-              placeholder="Имя" 
-              value={formData.name} 
-              disabled={status === 'loading' || status === 'success'}
-              onChange={(e) => handleInputChange('name', e.target.value)} 
-              className="w-full bg-transparent border-0 border-b border-[rgba(184,173,158,0.15)] pb-3 text-text font-body focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted placeholder:font-mono placeholder:text-sm rounded-none text-base"
-            />
-          </div>
-          
-          <div className="flex flex-col">
-            <input 
-              type="email" 
-              placeholder="Email" 
-              value={formData.email} 
-              disabled={status === 'loading' || status === 'success'}
-              onChange={(e) => handleInputChange('email', e.target.value)} 
-              className="w-full bg-transparent border-0 border-b border-[rgba(184,173,158,0.15)] pb-3 text-text font-body focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted placeholder:font-mono placeholder:text-sm rounded-none text-base"
-            />
-          </div>
+    <main className="relative flex min-h-screen w-full flex-col overflow-hidden bg-bg py-14 md:py-20">
+      <div className="pointer-events-none absolute left-1/3 top-1/2 h-[550px] w-[550px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/[0.02] blur-[130px]" />
 
-          <div className="flex flex-col">
-            <textarea 
-              placeholder="Сообщение" 
-              rows={4} 
-              value={formData.message} 
-              disabled={status === 'loading' || status === 'success'}
-              onChange={(e) => handleInputChange('message', e.target.value)} 
-              className="w-full bg-transparent border-0 border-b border-[rgba(184,173,158,0.15)] pb-3 text-text font-body focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted placeholder:font-mono placeholder:text-sm resize-none rounded-none text-base"
-            />
-          </div>
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-6 sm:px-10">
+        <SectionLabel>/ КОНТАКТ</SectionLabel>
 
-          {/* Honeypot field - invisible to humans, irresistible to spam bots */}
-          <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden" aria-hidden="true">
-            <input 
-              type="text" 
-              name={honeypotFieldName} 
-              value={honeypotValue} 
+        <h1 className="mt-4 max-w-[18ch] font-display text-[clamp(2.4rem,7vw,5rem)] font-black uppercase leading-[0.92] tracking-tight text-text">
+          Расскажи, что собираем.
+        </h1>
+        <p className="mt-5 max-w-[52ch] font-body text-sm leading-relaxed text-text-dim">
+          Опиши задачу в двух словах — я отвечу, задам пару вопросов и скажу, реально ли это в твои сроки. Обычно
+          отвечаю в течение дня.
+        </p>
+
+        <form
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (status !== 'loading' && status !== 'success') handleSend();
+          }}
+          className="mt-10 border-t border-[rgba(184,173,158,0.16)]"
+        >
+          <label className="group grid gap-2 border-b border-[rgba(184,173,158,0.16)] py-5 sm:grid-cols-[120px_1fr] sm:items-baseline">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted transition-colors group-focus-within:text-accent">
+              Имя
+            </span>
+            <input
+              type="text"
+              value={formData.name}
+              disabled={status === 'loading' || status === 'success'}
+              onChange={(event) => handleInputChange('name', event.target.value)}
+              placeholder="Как тебя зовут"
+              className="w-full bg-transparent font-display text-[clamp(1.25rem,2.8vw,1.9rem)] font-black uppercase leading-none tracking-tight text-text outline-none placeholder:text-text-muted/70 disabled:opacity-60"
+            />
+          </label>
+
+          <label className="group grid gap-2 border-b border-[rgba(184,173,158,0.16)] py-5 sm:grid-cols-[120px_1fr] sm:items-baseline">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted transition-colors group-focus-within:text-accent">
+              Email
+            </span>
+            <input
+              type="email"
+              value={formData.email}
+              disabled={status === 'loading' || status === 'success'}
+              onChange={(event) => handleInputChange('email', event.target.value)}
+              placeholder="you@mail.ru"
+              className="w-full bg-transparent font-display text-[clamp(1.25rem,2.8vw,1.9rem)] font-black uppercase leading-none tracking-tight text-text outline-none placeholder:text-text-muted/70 disabled:opacity-60"
+            />
+          </label>
+
+          <label className="group grid gap-2 border-b border-[rgba(184,173,158,0.16)] py-5 sm:grid-cols-[120px_1fr] sm:items-baseline">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted transition-colors group-focus-within:text-accent">
+              Задача
+            </span>
+            <textarea
+              rows={3}
+              value={formData.message}
+              disabled={status === 'loading' || status === 'success'}
+              onChange={(event) => handleInputChange('message', event.target.value)}
+              placeholder="Пара слов о проекте"
+              className="w-full resize-none bg-transparent font-display text-[clamp(1.25rem,2.8vw,1.9rem)] font-black uppercase leading-[1.1] tracking-tight text-text outline-none placeholder:text-text-muted/70 disabled:opacity-60"
+            />
+          </label>
+
+          {/* Honeypot — invisible to humans, irresistible to bots */}
+          <div className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
+            <input
+              type="text"
+              name={honeypotFieldName}
+              value={honeypotValue}
               tabIndex={-1}
               autoComplete="off"
-              onChange={(e) => handleHoneypotChange(e.target.value)}
+              onChange={(event) => setHoneypotValue(event.target.value)}
             />
           </div>
 
@@ -349,55 +361,66 @@ export default function ContactPage() {
                 setTurnstileToken(null);
                 turnstileResolveRef.current = null;
               }}
-              options={{
-                theme: 'dark',
-                size: 'invisible'
-              }}
+              options={{ theme: 'dark', size: 'invisible' }}
             />
           )}
 
-          <button 
-            onClick={handleSend} 
-            disabled={status === 'loading' || status === 'success'}
-            className="mt-6 flex items-center justify-center relative h-12 overflow-hidden border border-accent bg-transparent text-accent font-mono text-sm hover:bg-[rgba(184,173,158,0.05)] transition-colors disabled:opacity-50 cursor-pointer rounded-lg"
-          >
-            <AnimatePresence mode="wait">
-              <motion.span 
-                key={status} 
-                initial={{ y: 20, opacity: 0 }} 
-                animate={{ y: 0, opacity: 1 }} 
-                exit={{ y: -20, opacity: 0 }} 
-                transition={spring.snappy} 
-                className="absolute inset-0 flex items-center justify-center font-mono"
-              >
-                {statusText[status]}
-              </motion.span>
-            </AnimatePresence>
-          </button>
-        </div>
-
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            { label: 'Telegram', handle: '@Door0S', icon: <SiTelegram className="w-4 h-4 text-accent" />, url: 'https://t.me/Door0S' },
-            { label: 'GitHub', handle: 'SH20FK', icon: <SiGithub className="w-4 h-4 text-accent" />, url: 'https://github.com/SH20FK' },
-            { label: 'Last.fm', handle: 'SH20FK', icon: <SiLastdotfm className="w-4 h-4 text-accent" />, url: 'https://www.last.fm/user/SH20FK' },
-            { label: 'Steam', handle: 'SH20FK', icon: <SiSteam className="w-4 h-4 text-accent" />, url: 'https://steamcommunity.com/search/users/#text=SH20FK' },
-          ].map(c => (
-            <a 
-              href={c.url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              referrerPolicy="no-referrer" 
-              key={c.label} 
-              className="bg-surface border border-[rgba(184,173,158,0.08)] rounded-xl px-5 py-4 flex items-center gap-4 hover:border-[rgba(184,173,158,0.2)] hover:-translate-y-0.5 transition-all text-left group cursor-pointer block duration-300"
+          <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 py-6">
+            <button
+              type="submit"
+              disabled={status === 'loading' || status === 'success'}
+              className="group inline-flex items-center gap-3 font-display text-xl font-black uppercase leading-none tracking-tight text-text transition-colors hover:text-accent disabled:opacity-60 sm:text-2xl"
             >
-              <div className="flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">{c.icon}</div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-text-muted uppercase tracking-wider">{c.label}</span>
-                <span className="font-mono text-sm text-text mt-0.5">{c.handle}</span>
-              </div>
-            </a>
-          ))}
+              {buttonLabel}
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,173,158,0.25)] text-text-muted transition-all duration-500 group-hover:border-accent group-hover:bg-accent group-hover:text-bg sm:h-10 sm:w-10">
+                <ArrowUpRight
+                  className="h-4 w-4 transition-transform duration-500 group-hover:rotate-45"
+                  strokeWidth={1.5}
+                />
+              </span>
+            </button>
+
+            <p
+              role="status"
+              aria-live="polite"
+              className={`font-mono text-[10px] leading-relaxed ${
+                status === 'error'
+                  ? 'text-[#E0876A]'
+                  : status === 'success'
+                    ? 'text-accent'
+                    : 'text-text-muted'
+              }`}
+            >
+              {liveMessage}
+            </p>
+          </div>
+        </form>
+
+        <div className="mt-10 border-t border-[rgba(184,173,158,0.16)] pt-7">
+          <div className="grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+            {CHANNELS.map((channel) => (
+              <a
+                key={channel.label}
+                href={channel.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                referrerPolicy="no-referrer"
+                className="group flex items-center gap-2.5"
+              >
+                <channel.Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0 text-text-dim transition-colors group-hover:text-accent" />
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-display text-lg font-black uppercase leading-none tracking-tight text-text transition-colors group-hover:text-accent">
+                    {channel.label}
+                  </span>
+                  <span className="mt-1 font-mono text-[9px] text-text-muted">{channel.handle}</span>
+                </span>
+                <ArrowUpRight
+                  className="ml-auto h-3.5 w-3.5 shrink-0 text-text-muted transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                  strokeWidth={1.5}
+                />
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </main>

@@ -6,10 +6,10 @@ import { spring } from '@/lib/animations';
 import { useEffect, useState } from 'react';
 
 const LINKS = [
-  { name: 'About', href: '/#about', index: '01' },
-  { name: 'Work', href: '/work', index: '02' },
-  { name: 'Music', href: '/music', index: '03' },
-  { name: 'Contact', href: '/contact', index: '04' },
+  { name: 'About', href: '/#about' },
+  { name: 'Work', href: '/work' },
+  { name: 'Music', href: '/music' },
+  { name: 'Contact', href: '/contact' },
 ];
 
 export function NavBar() {
@@ -73,9 +73,6 @@ export function NavBar() {
                       active ? 'text-accent' : 'text-text-dim hover:text-text'
                     }`}
                   >
-                    <span className="hidden font-mono text-[9px] tracking-[0.08em] text-text-muted transition-colors duration-300 group-hover:text-accent sm:inline">
-                      {link.index}
-                    </span>
                     <span>{link.name}</span>
                     {active && (
                       <motion.span

@@ -7,8 +7,8 @@ import { NavBar } from '@/components/ui/NavBar';
 import { NowPlayingFAB } from '@/components/ui/NowPlayingFAB';
 import { ClientBoot } from '@/components/global/ClientBoot';
 import { CustomCursor } from '@/components/ui/CustomCursor';
-import { InkBleedTransition } from '@/components/global/InkBleedTransition';
 import { AccentSplash } from '@/components/global/AccentSplash';
+import { PageFade } from '@/components/global/PageFade';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 
@@ -27,8 +27,23 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || 'https://sh20fk.ru'),
-  title: 'SH20FK / Frontend Developer',
-  description: 'Portfolio of Alexander Salamatin (SH20FK)'
+  title: {
+    default: 'SH20FK / Frontend Developer',
+    template: '%s · SH20FK',
+  },
+  description:
+    'Портфолио Александра Саламатина (SH20FK): фронтенд, интерфейсы и небольшие игры. Работы, музыка из Last.fm и контакты.',
+  applicationName: 'SH20FK',
+  authors: [{ name: 'Alexander Salamatin', url: 'https://github.com/SH20FK' }],
+  keywords: ['фронтенд', 'разработчик', 'портфолио', 'React', 'Next.js', 'SH20FK', 'Челябинск'],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'SH20FK',
+    locale: 'ru_RU',
+    url: '/',
+  },
+  twitter: { card: 'summary_large_image' },
 };
 
 /** Applies the stored track colour before first paint so navigation never flashes the brand accent. */
@@ -44,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScrollProvider>
           <BackgroundWrapper />
           <NavBar />
-          <InkBleedTransition>{children}</InkBleedTransition>
+          <PageFade>{children}</PageFade>
           <AccentSplash />
           <NowPlayingFAB />
         </SmoothScrollProvider>
